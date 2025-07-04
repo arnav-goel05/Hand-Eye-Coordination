@@ -1,57 +1,48 @@
-/*
-See the LICENSE.txt file for this sample’s licensing information.
-
-Abstract:
-The view shown inside the immersive space.
-*/
-
+//
+//  ObjectTrackingRealityView.swift
+//
 import RealityKit
 import ARKit
 import SwiftUI
 import Combine
 
+extension ARKitSession: ObservableObject {}
+extension WorldTrackingProvider: ObservableObject {}
+extension HandTrackingProvider: ObservableObject {}
+
 @MainActor
 struct ObjectTrackingRealityView: View {
-    var appState: AppState
-    
-    /// 1) Create and hold onto your ARKitSession and WorldTrackingProvider
-    private let session   = ARKitSession()
-    private let worldInfo = WorldTrackingProvider()
-    
-    /// 2) A single root entity all visualizations get parented under
+    @State var appState: AppState
+
+    @StateObject private var session      = ARKitSession()
+    @StateObject private var worldInfo    = WorldTrackingProvider()
+    @StateObject private var handTracking = HandTrackingProvider()
+
     private let root = Entity()
-    
     @State private var objectVisualizations: [UUID: ObjectAnchorVisualization] = [:]
 
     var body: some View {
         RealityView { content in
-            // 3) Kick off ARKit with worldInfo
-            try? await session.run([worldInfo])
-            
-            // 4) Add your root container once
+            try? await session.run([worldInfo, handTracking])
             content.add(root)
 
+            // Object anchor handling
             Task {
-                let objectTracking = await appState.startTracking()
-                guard let objectTracking else { return }
-                
-                for await anchorUpdate in objectTracking.anchorUpdates {
-                    let anchor = anchorUpdate.anchor
-                    let id     = anchor.id
-                    
-                    switch anchorUpdate.event {
+                guard let objectTracking = await appState.startTracking() else { return }
+                for await update in objectTracking.anchorUpdates {
+                    let anchor = update.anchor, id = anchor.id
+                    switch update.event {
                     case .added:
-                        // 5) Pass in worldInfo when you create each visualization:
-                        let visualization = ObjectAnchorVisualization(
-                          for: anchor,
-                          using: worldInfo
+                        let viz = ObjectAnchorVisualization(
+                            for: anchor,
+                            using: worldInfo
                         )
-                        objectVisualizations[id] = visualization
-                        root.addChild(visualization.entity)
-                        
+                        objectVisualizations[id] = viz
+                        root.addChild(viz.entity)
+
                     case .updated:
                         objectVisualizations[id]?.update(with: anchor)
-                        
+
                     case .removed:
                         if let viz = objectVisualizations[id] {
                             root.removeChild(viz.entity)
@@ -60,13 +51,40 @@ struct ObjectTrackingRealityView: View {
                     }
                 }
             }
+
+            // Hand-tracking for index tip distance
+            Task {
+                for await update in handTracking.anchorUpdates {
+                    let handAnchor = update.anchor
+                    guard handAnchor.chirality == .right,
+                          let skel = handAnchor.handSkeleton
+                    else { continue }
+
+                    let joint = skel.joint(.indexFingerTip)
+                    guard joint.isTracked else { continue }
+
+                    let worldMatrix = handAnchor.originFromAnchorTransform
+                                    * joint.anchorFromJointTransform
+                    let tipPos = SIMD3<Float>(
+                        worldMatrix.columns.3.x,
+                        worldMatrix.columns.3.y,
+                        worldMatrix.columns.3.z
+                    )
+
+                    for viz in objectVisualizations.values {
+                        if let d = viz.distanceFromFinger(to: tipPos) {
+                            viz.updateDistance(d)
+                        }
+                    }
+                }
+            }
         }
+        .ignoresSafeArea()
         .onAppear {
             appState.isImmersiveSpaceOpened = true
         }
         .onDisappear {
-            // clean up
-            for (_, viz) in objectVisualizations {
+            for viz in objectVisualizations.values {
                 root.removeChild(viz.entity)
             }
             objectVisualizations.removeAll()

@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSEnterpriseMCAMUsageDescription</key>
+	<string>We need camera access for AR features in enterprise deployments.</string>
+	<key>NSHandsTrackingUsageDescription</key>
+	<string>We need hand tracking so we can detect and follow your index finger.</string>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
