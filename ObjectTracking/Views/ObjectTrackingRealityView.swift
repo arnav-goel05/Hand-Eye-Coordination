@@ -1,6 +1,7 @@
 //
 //  ObjectTrackingRealityView.swift
 //
+
 import RealityKit
 import ARKit
 import SwiftUI
@@ -20,6 +21,21 @@ struct ObjectTrackingRealityView: View {
 
     private let root = Entity()
     @State private var objectVisualizations: [UUID: ObjectAnchorVisualization] = [:]
+    
+    // MARK: - Finger Tracing State
+    @State private var isTracing: Bool = false
+    @State private var lastFingerPosition: SIMD3<Float>?
+    @State private var tracingStartTime: TimeInterval = 0
+    
+    // Gesture recognition for tracing control
+    @State private var fingerStationary: Bool = false
+    @State private var stationaryTimer: Timer?
+    @State private var lastMovementTime: TimeInterval = 0
+    
+    // Configuration
+    private let stationaryThreshold: Float = 0.01 // 1cm
+    private let stationaryDuration: TimeInterval = 1.0 // 1 second to start tracing
+    private let tracingTimeout: TimeInterval = 5.0 // Stop tracing after 5 seconds of no movement
 
     var body: some View {
         RealityView { content in
@@ -52,7 +68,7 @@ struct ObjectTrackingRealityView: View {
                 }
             }
 
-            // Hand-tracking for index tip distance
+            // Hand-tracking for index tip distance AND finger tracing
             Task {
                 for await update in handTracking.anchorUpdates {
                     let handAnchor = update.anchor
@@ -71,11 +87,15 @@ struct ObjectTrackingRealityView: View {
                         worldMatrix.columns.3.z
                     )
 
+                    // Update distance calculations for all visualizations
                     for viz in objectVisualizations.values {
                         if let d = viz.distanceFromFinger(to: tipPos) {
                             viz.updateDistance(d)
                         }
                     }
+                    
+                    // Handle finger tracing logic
+                    await handleFingerTracing(fingerPosition: tipPos)
                 }
             }
         }
@@ -90,5 +110,128 @@ struct ObjectTrackingRealityView: View {
             objectVisualizations.removeAll()
             appState.didLeaveImmersiveSpace()
         }
+        .overlay(alignment: .topTrailing) {
+            // Control buttons for tracing
+            VStack(spacing: 10) {
+                Button(action: startTracing) {
+                    Label("Start Trace", systemImage: "pencil")
+                        .foregroundColor(.white)
+                        .padding()
+                        .background(Color.green.opacity(0.7))
+                        .cornerRadius(10)
+                }
+                .disabled(isTracing)
+                
+                Button(action: stopTracing) {
+                    Label("Stop Trace", systemImage: "stop.fill")
+                        .foregroundColor(.white)
+                        .padding()
+                        .background(Color.red.opacity(0.7))
+                        .cornerRadius(10)
+                }
+                .disabled(!isTracing)
+                
+                Button(action: clearTrace) {
+                    Label("Clear", systemImage: "trash")
+                        .foregroundColor(.white)
+                        .padding()
+                        .background(Color.orange.opacity(0.7))
+                        .cornerRadius(10)
+                }
+                
+                // Status indicator
+                Text(isTracing ? "TRACING" : "READY")
+                    .foregroundColor(isTracing ? .green : .white)
+                    .font(.caption)
+                    .padding(.horizontal)
+            }
+            .padding()
+        }
+    }
+    
+    // MARK: - Finger Tracing Functions
+    
+    private func handleFingerTracing(fingerPosition: SIMD3<Float>) async {
+        let currentTime = CACurrentMediaTime()
+        
+        // Update finger tracing if active
+        if isTracing {
+            for viz in objectVisualizations.values {
+                viz.updateFingerTrace(fingerWorldPos: fingerPosition)
+            }
+            
+            // Check for automatic stop due to inactivity
+            if let lastPos = lastFingerPosition {
+                let movement = simd_length(fingerPosition - lastPos)
+                if movement > stationaryThreshold {
+                    lastMovementTime = currentTime
+                } else if currentTime - lastMovementTime > tracingTimeout {
+                    stopTracing()
+                }
+            } else {
+                lastMovementTime = currentTime
+            }
+        }
+        
+        // Gesture recognition for automatic tracing start
+        if !isTracing {
+            if let lastPos = lastFingerPosition {
+                let movement = simd_length(fingerPosition - lastPos)
+                
+                if movement < stationaryThreshold {
+                    if !fingerStationary {
+                        fingerStationary = true
+                        // Start timer for stationary detection
+                        stationaryTimer?.invalidate()
+                        stationaryTimer = Timer.scheduledTimer(withTimeInterval: stationaryDuration, repeats: false) { _ in
+                            Task { @MainActor in
+                                if fingerStationary && !isTracing {
+                                    startTracing()
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    fingerStationary = false
+                    stationaryTimer?.invalidate()
+                }
+            }
+        }
+        
+        lastFingerPosition = fingerPosition
+    }
+    
+    private func startTracing() {
+        isTracing = true
+        tracingStartTime = CACurrentMediaTime()
+        lastMovementTime = CACurrentMediaTime()
+        fingerStationary = false
+        stationaryTimer?.invalidate()
+        
+        for viz in objectVisualizations.values {
+            viz.startTracing()
+        }
+        
+        print("Started finger tracing")
+    }
+    
+    private func stopTracing() {
+        isTracing = false
+        fingerStationary = false
+        stationaryTimer?.invalidate()
+        
+        for viz in objectVisualizations.values {
+            viz.stopTracing()
+        }
+        
+        let tracingDuration = CACurrentMediaTime() - tracingStartTime
+        print("Stopped finger tracing after \(String(format: "%.2f", tracingDuration)) seconds")
+    }
+    
+    private func clearTrace() {
+        for viz in objectVisualizations.values {
+            viz.clearTrace()
+        }
+        print("Cleared all finger traces")
     }
 }

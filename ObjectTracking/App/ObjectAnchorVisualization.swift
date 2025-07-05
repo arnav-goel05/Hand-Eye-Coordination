@@ -7,6 +7,7 @@
 // Attaches a static 3D instruction label above a detected object
 // and draws a live dotted red line from the headset.
 // Finger-to-line distances are printed to the console.
+// NEW: Draws a continuous line tracing the finger's movement path.
 
 import ARKit
 import RealityKit
@@ -23,12 +24,23 @@ class ObjectAnchorVisualization {
     private var distanceObject: Double = 0.0
     private var lastTextUpdateTime: TimeInterval = 0.0
     
+    // MARK: - Finger Tracing Configuration
+    private let tracePointRadius: Float = 0.003
+    private let maxTracePoints: Int = 500
+    private let minTraceDistance: Float = 0.005 // Minimum distance to add new point
+    
     private let worldInfo: WorldTrackingProvider
     let entity: Entity
 
     /// Container for pooled red-dot spheres
     private let lineContainer: Entity
     private var dotEntities: [ModelEntity] = []
+    
+    /// Container for finger trace points
+    private let traceContainer: Entity
+    private var tracePoints: [SIMD3<Float>] = []
+    private var traceEntities: [ModelEntity] = []
+    private var isTracing: Bool = false
     
     /// Reference to the instruction text entity for updates
     private var instructionText: ModelEntity?
@@ -50,7 +62,7 @@ class ObjectAnchorVisualization {
         root.transform = Transform(matrix: anchor.originFromAnchorTransform)
         self.entity = root
         
-        // 2) Pre-pool red-dot spheres
+        // 2) Pre-pool red-dot spheres for headset-to-object line
         let container = Entity()
         container.name = "device→object dots"
         root.addChild(container)
@@ -68,7 +80,25 @@ class ObjectAnchorVisualization {
             dotEntities.append(dot)
         }
         
-        // 3) Create instruction text centered above object
+        // 3) Create finger trace container and pre-pool trace points
+        let traceContainer = Entity()
+        traceContainer.name = "finger trace"
+        root.addChild(traceContainer)
+        self.traceContainer = traceContainer
+        
+        let traceMesh = MeshResource.generateSphere(radius: tracePointRadius)
+        let traceMat = SimpleMaterial(
+            color: .init(red: 0, green: 1, blue: 0, alpha: 0.8),
+            isMetallic: false
+        )
+        for _ in 0..<maxTracePoints {
+            let tracePoint = ModelEntity(mesh: traceMesh, materials: [traceMat])
+            tracePoint.isEnabled = false
+            traceContainer.addChild(tracePoint)
+            traceEntities.append(tracePoint)
+        }
+        
+        // 4) Create instruction text centered above object
         self.createInstructionText()
     }
     
@@ -136,6 +166,84 @@ class ObjectAnchorVisualization {
         }
     }
 
+    // MARK: – Finger Tracing Functions
+    
+    /// Start tracing the finger's movement
+    func startTracing() {
+        isTracing = true
+        clearTrace()
+        print("Started finger tracing")
+    }
+    
+    /// Stop tracing the finger's movement
+    func stopTracing() {
+        isTracing = false
+        print("Stopped finger tracing")
+    }
+    
+    /// Clear the current trace
+    func clearTrace() {
+        tracePoints.removeAll()
+        traceEntities.forEach { $0.isEnabled = false }
+        print("Cleared finger trace")
+    }
+    
+    /// Update finger trace with new position
+    func updateFingerTrace(fingerWorldPos: SIMD3<Float>) {
+        guard isTracing else { return }
+        
+        // Check if we should add a new point (minimum distance threshold)
+        if let lastPoint = tracePoints.last {
+            let distance = simd_length(fingerWorldPos - lastPoint)
+            if distance < minTraceDistance {
+                return // Too close to last point, skip
+            }
+        }
+        
+        // Add new trace point
+        tracePoints.append(fingerWorldPos)
+        
+        // Remove oldest point if we exceed max points
+        if tracePoints.count > maxTracePoints {
+            tracePoints.removeFirst()
+        }
+        
+        // Update visual representation
+        updateTraceVisualization()
+    }
+    
+    /// Update the visual representation of the trace
+    private func updateTraceVisualization() {
+        // Hide all trace entities first
+        traceEntities.forEach { $0.isEnabled = false }
+        
+        // Show entities for current trace points
+        for (index, worldPos) in tracePoints.enumerated() {
+            if index < traceEntities.count {
+                let traceEntity = traceEntities[index]
+                let localPos = entity.convert(position: worldPos, from: nil)
+                traceEntity.transform.translation = localPos
+                traceEntity.isEnabled = true
+            }
+        }
+    }
+    
+    /// Get the current trace as an array of world positions
+    func getTracePoints() -> [SIMD3<Float>] {
+        return tracePoints
+    }
+    
+    /// Get the trace length in meters
+    func getTraceLength() -> Float {
+        guard tracePoints.count > 1 else { return 0 }
+        
+        var totalLength: Float = 0
+        for i in 1..<tracePoints.count {
+            totalLength += simd_length(tracePoints[i] - tracePoints[i-1])
+        }
+        return totalLength
+    }
+
     // MARK: – Distance label API
     func updateDistance(_ distance: Float) {
         print(String(format: "Distance to red line: %.3f m", distance))
@@ -153,7 +261,10 @@ class ObjectAnchorVisualization {
     private func updateInstructionText() {
         guard let textEntity = instructionText else { return }
         
-        let textString = "Trace the dotted red line from your headset to the object: \(String(format: "%.3f", distanceObject))m"
+        let tracingStatus = isTracing ? "TRACING" : "READY"
+        let traceLength = getTraceLength()
+        let textString = "Trace the dotted red line from your headset to the object: \(String(format: "%.3f", distanceObject))m\n\(tracingStatus) - Trace length: \(String(format: "%.3f", traceLength))m"
+        
         let newMesh = MeshResource.generateText(
             textString,
             extrusionDepth: 0.001,
