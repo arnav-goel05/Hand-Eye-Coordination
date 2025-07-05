@@ -104,6 +104,10 @@ struct ObjectTrackingRealityView: View {
             appState.isImmersiveSpaceOpened = true
         }
         .onDisappear {
+            // Clean up timers
+            stationaryTimer?.invalidate()
+            stationaryTimer = nil
+            
             for viz in objectVisualizations.values {
                 root.removeChild(viz.entity)
             }
@@ -185,8 +189,8 @@ struct ObjectTrackingRealityView: View {
                         stationaryTimer?.invalidate()
                         stationaryTimer = Timer.scheduledTimer(withTimeInterval: stationaryDuration, repeats: false) { _ in
                             Task { @MainActor in
-                                if fingerStationary && !isTracing {
-                                    startTracing()
+                                if self.fingerStationary && !self.isTracing {
+                                    self.startTracing()
                                 }
                             }
                         }

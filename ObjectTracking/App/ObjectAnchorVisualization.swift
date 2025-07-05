@@ -25,7 +25,7 @@ class ObjectAnchorVisualization {
     private var lastTextUpdateTime: TimeInterval = 0.0
     
     // MARK: - Finger Tracing Configuration
-    private let tracePointRadius: Float = 0.003
+    private let lineWidth: Float = 0.005 // Width of the continuous line
     private let maxTracePoints: Int = 500
     private let minTraceDistance: Float = 0.005 // Minimum distance to add new point
     
@@ -36,10 +36,10 @@ class ObjectAnchorVisualization {
     private let lineContainer: Entity
     private var dotEntities: [ModelEntity] = []
     
-    /// Container for finger trace points
+    /// Container for finger trace line
     private let traceContainer: Entity
     private var tracePoints: [SIMD3<Float>] = []
-    private var traceEntities: [ModelEntity] = []
+    private var traceLineEntity: ModelEntity?
     private var isTracing: Bool = false
     
     /// Reference to the instruction text entity for updates
@@ -80,23 +80,11 @@ class ObjectAnchorVisualization {
             dotEntities.append(dot)
         }
         
-        // 3) Create finger trace container and pre-pool trace points
+        // 3) Create finger trace container for continuous line
         let traceContainer = Entity()
-        traceContainer.name = "finger trace"
+        traceContainer.name = "finger trace line"
         root.addChild(traceContainer)
         self.traceContainer = traceContainer
-        
-        let traceMesh = MeshResource.generateSphere(radius: tracePointRadius)
-        let traceMat = SimpleMaterial(
-            color: .init(red: 0, green: 1, blue: 0, alpha: 0.8),
-            isMetallic: false
-        )
-        for _ in 0..<maxTracePoints {
-            let tracePoint = ModelEntity(mesh: traceMesh, materials: [traceMat])
-            tracePoint.isEnabled = false
-            traceContainer.addChild(tracePoint)
-            traceEntities.append(tracePoint)
-        }
         
         // 4) Create instruction text centered above object
         self.createInstructionText()
@@ -184,7 +172,10 @@ class ObjectAnchorVisualization {
     /// Clear the current trace
     func clearTrace() {
         tracePoints.removeAll()
-        traceEntities.forEach { $0.isEnabled = false }
+        if let lineEntity = traceLineEntity {
+            traceContainer.removeChild(lineEntity)
+            traceLineEntity = nil
+        }
         print("Cleared finger trace")
     }
     
@@ -212,20 +203,112 @@ class ObjectAnchorVisualization {
         updateTraceVisualization()
     }
     
-    /// Update the visual representation of the trace
+    /// Update the visual representation of the trace as a continuous line
     private func updateTraceVisualization() {
-        // Hide all trace entities first
-        traceEntities.forEach { $0.isEnabled = false }
+        guard tracePoints.count >= 2 else {
+            // Remove line if not enough points
+            if let lineEntity = traceLineEntity {
+                traceContainer.removeChild(lineEntity)
+                traceLineEntity = nil
+            }
+            return
+        }
         
-        // Show entities for current trace points
-        for (index, worldPos) in tracePoints.enumerated() {
-            if index < traceEntities.count {
-                let traceEntity = traceEntities[index]
-                let localPos = entity.convert(position: worldPos, from: nil)
-                traceEntity.transform.translation = localPos
-                traceEntity.isEnabled = true
+        // Convert world positions to local positions relative to the entity
+        let localPoints = tracePoints.map { worldPos in
+            entity.convert(position: worldPos, from: nil)
+        }
+        
+        // Create line mesh from points
+        let lineMesh = createLineMesh(from: localPoints, width: lineWidth)
+        
+        // Create or update line entity
+        if let existingLineEntity = traceLineEntity {
+            existingLineEntity.model?.mesh = lineMesh
+        } else {
+            let lineMaterial = SimpleMaterial(
+                color: .init(red: 0.5, green: 1.0, blue: 0.5, alpha: 0.8),
+                isMetallic: false
+            )
+            let lineEntity = ModelEntity(mesh: lineMesh, materials: [lineMaterial])
+            traceContainer.addChild(lineEntity)
+            traceLineEntity = lineEntity
+        }
+    }
+    
+    /// Create a line mesh from a series of points
+    private func createLineMesh(from points: [SIMD3<Float>], width: Float) -> MeshResource {
+        var vertices: [SIMD3<Float>] = []
+        var indices: [UInt32] = []
+        var normals: [SIMD3<Float>] = []
+        
+        let halfWidth = width * 0.5
+        
+        for i in 0..<points.count {
+            let currentPoint = points[i]
+            
+            // Calculate direction vectors
+            let forward: SIMD3<Float>
+            if i == 0 {
+                forward = normalize(points[i + 1] - currentPoint)
+            } else if i == points.count - 1 {
+                forward = normalize(currentPoint - points[i - 1])
+            } else {
+                forward = normalize(points[i + 1] - points[i - 1])
+            }
+            
+            // Calculate perpendicular vector for width
+            let up = SIMD3<Float>(0, 1, 0)
+            let right = normalize(cross(forward, up))
+            let actualUp = normalize(cross(right, forward))
+            
+            // Create quad vertices for this segment
+            let v1 = currentPoint + right * halfWidth + actualUp * halfWidth
+            let v2 = currentPoint - right * halfWidth + actualUp * halfWidth
+            let v3 = currentPoint - right * halfWidth - actualUp * halfWidth
+            let v4 = currentPoint + right * halfWidth - actualUp * halfWidth
+            
+            let baseIndex = UInt32(vertices.count)
+            vertices.append(contentsOf: [v1, v2, v3, v4])
+            
+            // Add normals
+            let normal = actualUp
+            normals.append(contentsOf: [normal, normal, normal, normal])
+            
+            // Create triangles for the quad (if not the last point)
+            if i < points.count - 1 {
+                // Two triangles per quad
+                indices.append(contentsOf: [
+                    baseIndex, baseIndex + 1, baseIndex + 2,
+                    baseIndex, baseIndex + 2, baseIndex + 3
+                ])
             }
         }
+        
+        // Connect segments
+        for i in 0..<points.count - 1 {
+            let baseIndex = UInt32(i * 4)
+            let nextBaseIndex = UInt32((i + 1) * 4)
+            
+            // Connect the segments with triangles
+            indices.append(contentsOf: [
+                baseIndex, nextBaseIndex, baseIndex + 1,
+                nextBaseIndex, nextBaseIndex + 1, baseIndex + 1,
+                baseIndex + 1, nextBaseIndex + 1, baseIndex + 2,
+                nextBaseIndex + 1, nextBaseIndex + 2, baseIndex + 2,
+                baseIndex + 2, nextBaseIndex + 2, baseIndex + 3,
+                nextBaseIndex + 2, nextBaseIndex + 3, baseIndex + 3,
+                baseIndex + 3, nextBaseIndex + 3, baseIndex,
+                nextBaseIndex + 3, nextBaseIndex, baseIndex
+            ])
+        }
+        
+        var descriptor = MeshDescriptor(name: "TraceLine")
+        descriptor.positions = MeshBuffer(vertices)
+        descriptor.normals = MeshBuffer(normals)
+        descriptor.primitives = .triangles(indices)
+        
+        return try! MeshResource.generate(from: [descriptor])
     }
     
     /// Get the current trace as an array of world positions
