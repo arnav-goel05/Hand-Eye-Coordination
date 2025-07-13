@@ -14,6 +14,9 @@
 		A71BB24C2E06668E004C1AB9 /* Soy sauce.referenceobject in Sources */ = {isa = PBXBuildFile; fileRef = A71BB24B2E06668E004C1AB9 /* Soy sauce.referenceobject */; };
 		A780B5AF2E0C3BBE0051FF80 /* Cocoa.referenceobject in Sources */ = {isa = PBXBuildFile; fileRef = A780B5AE2E0C3BBE0051FF80 /* Cocoa.referenceobject */; };
 		A790416E2E16DE3500A37361 /* Ramen.referenceobject in Sources */ = {isa = PBXBuildFile; fileRef = A790416D2E16DE3500A37361 /* Ramen.referenceobject */; };
+		A7DEC3BA2E202290000FF2CF /* FingerTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7DEC3B92E20228B000FF2CF /* FingerTracker.swift */; };
+		A7DEC3BC2E20229B000FF2CF /* DistanceCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7DEC3BB2E202296000FF2CF /* DistanceCalculator.swift */; };
+		A7DEC3BE2E2022A8000FF2CF /* HeadsetLineRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7DEC3BD2E2022A1000FF2CF /* HeadsetLineRenderer.swift */; };
 		E18F5F9A2BBD6C6500D9BFF2 /* ListEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E18F5F992BBD6C6500D9BFF2 /* ListEntryView.swift */; };
 		EB5034152AF137FA0020B48F /* InfoLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB5034142AF137FA0020B48F /* InfoLabel.swift */; };
 		EBA142DF2AD431AD00FB20AD /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBA142DE2AD431AD00FB20AD /* HomeView.swift */; };
@@ -34,6 +37,9 @@
 		A71BB24B2E06668E004C1AB9 /* Soy sauce.referenceobject */ = {isa = PBXFileReference; lastKnownFileType = file.referenceobject; path = "Soy sauce.referenceobject"; sourceTree = "<group>"; };
 		A780B5AE2E0C3BBE0051FF80 /* Cocoa.referenceobject */ = {isa = PBXFileReference; lastKnownFileType = file.referenceobject; path = Cocoa.referenceobject; sourceTree = "<group>"; };
 		A790416D2E16DE3500A37361 /* Ramen.referenceobject */ = {isa = PBXFileReference; lastKnownFileType = file.referenceobject; path = Ramen.referenceobject; sourceTree = "<group>"; };
+		A7DEC3B92E20228B000FF2CF /* FingerTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FingerTracker.swift; sourceTree = "<group>"; };
+		A7DEC3BB2E202296000FF2CF /* DistanceCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DistanceCalculator.swift; sourceTree = "<group>"; };
+		A7DEC3BD2E2022A1000FF2CF /* HeadsetLineRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeadsetLineRenderer.swift; sourceTree = "<group>"; };
 		E18F5F992BBD6C6500D9BFF2 /* ListEntryView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ListEntryView.swift; sourceTree = "<group>"; };
 		EB5034142AF137FA0020B48F /* InfoLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoLabel.swift; sourceTree = "<group>"; };
 		EBA142DE2AD431AD00FB20AD /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
@@ -127,6 +133,9 @@
 		EBF0DF0E2AEFFDB900ABF63C /* App */ = {
 			isa = PBXGroup;
 			children = (
+				A7DEC3BD2E2022A1000FF2CF /* HeadsetLineRenderer.swift */,
+				A7DEC3BB2E202296000FF2CF /* DistanceCalculator.swift */,
+				A7DEC3B92E20228B000FF2CF /* FingerTracker.swift */,
 				EBE296542AE27E5900F6838C /* AppState.swift */,
 				396786E02B7A5CF8007A056F /* ReferenceObjectLoader.swift */,
 				396786C52B766C44007A056F /* ObjectAnchorVisualization.swift */,
@@ -212,12 +221,15 @@
 			buildActionMask = 2147483647;
 			files = (
 				EB5034152AF137FA0020B48F /* InfoLabel.swift in Sources */,
+				A7DEC3BA2E202290000FF2CF /* FingerTracker.swift in Sources */,
+				A7DEC3BE2E2022A8000FF2CF /* HeadsetLineRenderer.swift in Sources */,
 				396786E12B7A5CF8007A056F /* ReferenceObjectLoader.swift in Sources */,
 				A71BB24C2E06668E004C1AB9 /* Soy sauce.referenceobject in Sources */,
 				EBDA9DAC2AD44D140040C78E /* ObjectTrackingRealityView.swift in Sources */,
 				A790416E2E16DE3500A37361 /* Ramen.referenceobject in Sources */,
 				EBA142DF2AD431AD00FB20AD /* HomeView.swift in Sources */,
 				394D18CF2A960EB9009E3A2E /* ObjectTrackingApp.swift in Sources */,
+				A7DEC3BC2E20229B000FF2CF /* DistanceCalculator.swift in Sources */,
 				396786C62B766C54007A056F /* ObjectAnchorVisualization.swift in Sources */,
 				A780B5AF2E0C3BBE0051FF80 /* Cocoa.referenceobject in Sources */,
 				393E4AB02A9629A7005C9691 /* Entity+ObjectTracking.swift in Sources */,
