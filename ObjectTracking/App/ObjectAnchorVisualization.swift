@@ -21,6 +21,7 @@ class ObjectAnchorVisualization {
 
     // MARK: - Components
     private let worldInfo: WorldTrackingProvider
+    private let dataManager: DataManager
     let entity: Entity
 
     private let headsetLineRenderer: HeadsetLineRenderer
@@ -33,14 +34,17 @@ class ObjectAnchorVisualization {
     private let anchorBoundingBox: ObjectAnchor.AxisAlignedBoundingBox
     private var textScale: SIMD3<Float> = [1, 1, 1]
 
+
     // MARK: - Initialization
     @MainActor
     init(
         for anchor: ObjectAnchor,
-        using worldInfo: WorldTrackingProvider
+        using worldInfo: WorldTrackingProvider,
+        dataManager: DataManager
     ) {
         self.worldInfo = worldInfo
         self.anchorBoundingBox = anchor.boundingBox
+        self.dataManager = dataManager
 
         // 1) Root entity anchored to the object
         let root = Entity()
@@ -142,7 +146,7 @@ class ObjectAnchorVisualization {
         // Increased pane dimensions
         let paneWidth: Float = 0.7
         let paneHeight: Float = 0.08
-        let paneDepth: Float = 0.015
+        let paneDepth: Float = 0
 
         // Larger corner radius for more pronounced rounding
         let cornerRadius: Float = 0.05
@@ -210,11 +214,12 @@ class ObjectAnchorVisualization {
         entity.addChild(textEntity)
         instructionText = textEntity
     }
-
+    
     private func updateInstructionText() {
         guard let textEntity = instructionText else { return }
 
         let traceLength = fingerTracker.getTraceLength()
+        dataManager.setTotalTraceLength(traceLength)
         let textString = String(
             format: "Trace the dotted red line from your headset to the object.\n Distance from your index finger and the ideal path is %.3f m\n Trace length: %.3f m",
             distanceObject,

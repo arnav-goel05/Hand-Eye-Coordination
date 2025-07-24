@@ -13,11 +13,13 @@ extension HandTrackingProvider: ObservableObject {}
 
 @MainActor
 struct ObjectTrackingRealityView: View {
+
     @State var appState: AppState
 
     @StateObject private var session      = ARKitSession()
     @StateObject private var worldInfo    = WorldTrackingProvider()
     @StateObject private var handTracking = HandTrackingProvider()
+    @EnvironmentObject var dataManager: DataManager
 
     private let root = Entity()
     @State private var objectVisualizations: [UUID: ObjectAnchorVisualization] = [:]
@@ -64,7 +66,8 @@ struct ObjectTrackingRealityView: View {
                             case .added:
                                 let viz = ObjectAnchorVisualization(
                                     for: anchor,
-                                    using: worldInfo
+                                    using: worldInfo,
+                                    dataManager: dataManager
                                 )
                                 objectVisualizations[id] = viz
                                 trackedAnchors[id] = anchor
@@ -146,6 +149,7 @@ struct ObjectTrackingRealityView: View {
             objectVisualizations.removeAll()
             trackedAnchors.removeAll()
             buttonPositions.removeAll()
+            
             appState.didLeaveImmersiveSpace()
         }
     }

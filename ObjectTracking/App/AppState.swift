@@ -13,7 +13,7 @@ class AppState {
     var isImmersiveSpaceOpened = false
     
     let referenceObjectLoader = ReferenceObjectLoader()
-
+    
     func didLeaveImmersiveSpace() {
         // Stop the provider; the provider that just ran in the
         // immersive space is now in a paused state and isn't needed
@@ -115,3 +115,4 @@ class AppState {
         }
     }
 }
+

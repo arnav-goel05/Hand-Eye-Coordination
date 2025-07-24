@@ -1,5 +1,5 @@
 /*
-See the LICENSE.txt file for this sample’s licensing information.
+See the LICENSE.txt file for this sample's licensing information.
 
 Abstract:
 The app's entry point.
@@ -15,6 +15,7 @@ private enum UIIdentifier {
 @MainActor
 struct ObjectTrackingApp: App {
     @State private var appState = AppState()
+    @StateObject private var dataManager = DataManager()
     
     var body: some Scene {
         WindowGroup(id: "Main") {
@@ -29,14 +30,17 @@ struct ObjectTrackingApp: App {
             }
         }
         .windowStyle(.plain)
+        .environmentObject(dataManager)
 
         ImmersiveSpace(id: UIIdentifier.immersiveSpace) {
             ObjectTrackingRealityView(appState: appState)
         }
+        .environmentObject(dataManager)
 
         // NEW: 2D Congrats window
         WindowGroup(id: "CongratsActivity") {
-            CongratsView()
+            SummaryView()
         }
+        .environmentObject(dataManager)
     }
 }
