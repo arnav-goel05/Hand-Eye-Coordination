@@ -5,6 +5,7 @@
 //
 // Abstract:
 // Renders a dotted red line from the headset to the target object.
+// Now supports “freezing” the dots so they no longer update once tracing begins.
 
 import ARKit
 import RealityKit
@@ -17,32 +18,41 @@ class HeadsetLineRenderer {
     private let dotRadius: Float = 0.002
     private let dotSpacing: Float = 0.05
     private let maxDots: Int = Int(5.0 / 0.05) // Maximum line length of 5 meters
-    
+
+    // MARK: - State
+    private var isFrozen: Bool = false         // When true, skip updates
+
     // MARK: - Entities
     private let lineContainer: Entity
     private var dotEntities: [ModelEntity] = []
-    
+
     init(parentEntity: Entity) {
         // Create container for pooled red-dot spheres
         let container = Entity()
         container.name = "device→object dots"
         parentEntity.addChild(container)
         self.lineContainer = container
-        
+
         // Pre-pool red-dot spheres for performance
         createDotPool()
     }
-    
+
+    // MARK: - Freeze Control
+
+    /// Once called, subsequent calls to `updateDottedLine` do nothing.
+    func freezeDots() {
+        isFrozen = true
+    }
+
     // MARK: - Dot Pool Management
-    
-    /// Create a pool of reusable dot entities for performance
+
     private func createDotPool() {
         let sphereMesh = MeshResource.generateSphere(radius: dotRadius)
         let sphereMaterial = SimpleMaterial(
             color: .init(red: 1, green: 0, blue: 0, alpha: 0.8),
             isMetallic: false
         )
-        
+
         for _ in 0..<maxDots {
             let dot = ModelEntity(mesh: sphereMesh, materials: [sphereMaterial])
             dot.isEnabled = false
@@ -50,60 +60,56 @@ class HeadsetLineRenderer {
             dotEntities.append(dot)
         }
     }
-    
+
     // MARK: - Line Rendering
-    
-    /// Update the dotted line visualization from headset to object
+
+    /// Update the dotted-line visualization from headset to object.
+    /// If `freezeDots()` has been called, this will early-exit.
     func updateDottedLine(
         from headsetPos: SIMD3<Float>,
         to objectPos: SIMD3<Float>,
         relativeTo entity: Entity
     ) {
+        guard !isFrozen else { return }
+
         lineContainer.isEnabled = true
-        
-        // Calculate line vector and length
+
+        // Compute vector and total length
         let lineVector = objectPos - headsetPos
         let lineLength = simd_length(lineVector)
-        
-        // Calculate number of dots to display
+
+        // Determine how many dots to show
         let dotCount = min(maxDots - 1, Int(lineLength / dotSpacing))
-        
-        // Position dots along the line
+
         for i in 0..<maxDots {
             let dot = dotEntities[i]
-            
+
             if i <= dotCount {
-                // Calculate position along the line
                 let t = Float(i) / Float(max(dotCount, 1))
                 let worldPosition = headsetPos + lineVector * t
-                
-                // Convert to local coordinates relative to the entity
                 let localPosition = entity.convert(position: worldPosition, from: nil)
-                
-                // Update dot position and make it visible
+
                 dot.transform.translation = localPosition
                 dot.isEnabled = true
             } else {
-                // Hide unused dots
                 dot.isEnabled = false
             }
         }
     }
-    
-    /// Hide all dots (used when tracking is lost)
+
+    // MARK: - Visibility
+
     func hideAllDots() {
         dotEntities.forEach { $0.isEnabled = false }
         lineContainer.isEnabled = false
     }
-    
-    /// Show all active dots
+
     func showAllDots() {
         lineContainer.isEnabled = true
     }
-    
-    // MARK: - Configuration
-    
-    /// Update dot appearance properties
+
+    // MARK: - Configuration Adjustments
+
     func updateDotAppearance(
         radius: Float? = nil,
         color: UIColor? = nil,
@@ -111,47 +117,49 @@ class HeadsetLineRenderer {
     ) {
         let newRadius = radius ?? dotRadius
         let newColor = color ?? UIColor.red
-        let newAlpha = alpha ?? 0.7
-        
-        // Create new mesh and material if needed
+        let newAlpha = alpha ?? 0.8
+
         let shouldUpdateMesh = radius != nil
         let shouldUpdateMaterial = color != nil || alpha != nil
-        
+
         if shouldUpdateMesh || shouldUpdateMaterial {
-            let mesh = shouldUpdateMesh ? MeshResource.generateSphere(radius: newRadius) : nil
-            let material = shouldUpdateMaterial ? SimpleMaterial(
-                color: .init(red: 1, green: 0, blue: 0, alpha: 0.5),
-                isMetallic: false
-            ) : nil
-            
+            let mesh = shouldUpdateMesh
+                ? MeshResource.generateSphere(radius: newRadius)
+                : nil
+
+            let material = shouldUpdateMaterial
+                ? SimpleMaterial(
+                    color: .init(red: 1, green: 0, blue: 0, alpha: CGFloat(newAlpha)),
+                    isMetallic: false
+                )
+                : nil
+
             for dot in dotEntities {
-                if let newMesh = mesh {
-                    dot.model?.mesh = newMesh
+                if let m = mesh {
+                    dot.model?.mesh = m
                 }
-                if let newMaterial = material {
-                    dot.model?.materials = [newMaterial]
+                if let mat = material {
+                    dot.model?.materials = [mat]
                 }
             }
         }
     }
-    
-    /// Get the current number of visible dots
+
+    // MARK: - Diagnostics
+
     func getVisibleDotCount() -> Int {
-        return dotEntities.filter { $0.isEnabled }.count
+        dotEntities.filter { $0.isEnabled }.count
     }
-    
-    /// Get the spacing between dots
+
     func getDotSpacing() -> Float {
-        return dotSpacing
+        dotSpacing
     }
-    
-    /// Get the maximum number of dots that can be displayed
+
     func getMaxDotCount() -> Int {
-        return maxDots
+        maxDots
     }
-    
-    /// Calculate the maximum line length that can be visualized
+
     func getMaxLineLength() -> Float {
-        return Float(maxDots) * dotSpacing
+        Float(maxDots) * dotSpacing
     }
 }

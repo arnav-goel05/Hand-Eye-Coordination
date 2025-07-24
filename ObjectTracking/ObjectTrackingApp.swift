@@ -17,7 +17,7 @@ struct ObjectTrackingApp: App {
     @State private var appState = AppState()
     
     var body: some Scene {
-        WindowGroup {
+        WindowGroup(id: "Main") {
             HomeView(
                 appState: appState,
                 immersiveSpaceIdentifier: UIIdentifier.immersiveSpace
@@ -32,6 +32,11 @@ struct ObjectTrackingApp: App {
 
         ImmersiveSpace(id: UIIdentifier.immersiveSpace) {
             ObjectTrackingRealityView(appState: appState)
+        }
+
+        // NEW: 2D Congrats window
+        WindowGroup(id: "CongratsActivity") {
+            CongratsView()
         }
     }
 }

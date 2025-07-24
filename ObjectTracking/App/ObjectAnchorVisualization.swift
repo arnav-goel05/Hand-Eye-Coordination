@@ -49,7 +49,10 @@ class ObjectAnchorVisualization {
 
         // 2) Initialize components
         self.headsetLineRenderer = HeadsetLineRenderer(parentEntity: root)
-        self.fingerTracker = FingerTracker(parentEntity: root)
+        self.fingerTracker = FingerTracker(
+            parentEntity: root,
+            objectExtents: anchor.boundingBox.extent
+        )
         self.distanceCalculator = DistanceCalculator(worldInfo: worldInfo)
 
         // 3) Create UI:
@@ -83,9 +86,11 @@ class ObjectAnchorVisualization {
 
     // MARK: - Finger Tracking Interface
     func startTracing() {
+        headsetLineRenderer.freezeDots()
         fingerTracker.startTracing()
         updateInstructionText()
     }
+
 
     func stopTracing() {
         fingerTracker.stopTracing()
@@ -211,7 +216,7 @@ class ObjectAnchorVisualization {
 
         let traceLength = fingerTracker.getTraceLength()
         let textString = String(
-            format: "Trace the dotted red line from your headset to the object.\n Distance from your index finger and the ideal path: %.3f m\n Trace length: %.3f m",
+            format: "Trace the dotted red line from your headset to the object.\n Distance from your index finger and the ideal path is %.3f m\n Trace length: %.3f m",
             distanceObject,
             traceLength
         )

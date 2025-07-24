@@ -1,9 +1,6 @@
 // FingerTracker.swift
 // I3D-stroke-rehab
 //
-// See the LICENSE.txt file for this sample's licensing information.
-//
-// Abstract:
 // Handles finger movement tracking and continuous line visualization.
 
 import ARKit
@@ -14,196 +11,157 @@ import simd
 @MainActor
 class FingerTracker {
     // MARK: - Configuration
-    private let lineWidth: Float = 0.005 // Width of the continuous line
-    private let minTraceDistance: Float = 0 // Minimum distance to add new point
-    
+    private let lineWidth: Float = 0.005       // Width of the continuous line
+    private let minTraceDistance: Float = 0    // Min distance to add a new point
+    private let touchMargin: Float = 0.02      // 2 cm margin around box
+
+    // MARK: - Object geometry
+    private let halfExtents: SIMD3<Float>      // Half the size of the object’s bounding box
+
     // MARK: - State
     private(set) var isTracing: Bool = false
-    private var tracePoints: [SIMD3<Float>] = []
-    
+    private var traceSegments: [[SIMD3<Float>]] = []
+    private var traceLineEntities: [ModelEntity] = []
+
     // MARK: - Entities
     private let traceContainer: Entity
-    private var traceLineEntity: ModelEntity?
-    
-    init(parentEntity: Entity) {
-        // Create finger trace container for continuous line
+
+    /// - Parameters:
+    ///   - parentEntity: the AR anchor’s root entity
+    ///   - objectExtents: full size of the object’s axis-aligned bounding box
+    init(parentEntity: Entity, objectExtents: SIMD3<Float>) {
+        self.halfExtents = objectExtents / 2
+
         let container = Entity()
         container.name = "finger trace line"
         parentEntity.addChild(container)
         self.traceContainer = container
     }
-    
+
     // MARK: - Tracing Control
-    
-    /// Start tracing the finger's movement
+
+    /// Start tracing without clearing any existing line
     func startTracing() {
+        guard !isTracing else { return }
         isTracing = true
-        clearTrace()
+        traceSegments.append([])
+        traceLineEntities.append(ModelEntity()) // Placeholder; will be replaced when drawing
         print("Started finger tracing")
     }
-    
-    /// Stop tracing the finger's movement
+
+    /// Stop tracing immediately
     func stopTracing() {
-        isTracing = false
-        print("Stopped finger tracing")
-    }
-    
-    /// Clear the current trace
-    func clearTrace() {
-        tracePoints.removeAll()
-        if let lineEntity = traceLineEntity {
-            traceContainer.removeChild(lineEntity)
-            traceLineEntity = nil
-        }
-        print("Cleared finger trace")
-    }
-    
-    // MARK: - Trace Update
-    
-    /// Update finger trace with new position
-    func updateFingerTrace(fingerWorldPos: SIMD3<Float>, relativeTo entity: Entity) {
         guard isTracing else { return }
-        
-        // Check if we should add a new point (minimum distance threshold)
-        if let lastPoint = tracePoints.last {
-            let distance = simd_length(fingerWorldPos - lastPoint)
-            if distance < minTraceDistance {
-                return // Too close to last point, skip
+        isTracing = false
+        print("Stopped finger tracing.")
+    }
+
+    /// Clear all traces and entities
+    func clearTrace() {
+        for entity in traceLineEntities { entity.removeFromParent() }
+        traceSegments.removeAll()
+        traceLineEntities.removeAll()
+        print("Cleared all finger traces")
+    }
+
+    // MARK: - Trace Update
+
+    /// Called every frame with the fingertip’s world position.
+    /// If the fingertip enters the object’s bounding box (plus a margin), we stop tracing.
+    /// Otherwise, if still tracing, we append the new point and update the mesh.
+    func updateFingerTrace(fingerWorldPos: SIMD3<Float>, relativeTo entity: Entity) {
+        guard isTracing, !traceSegments.isEmpty else { return }
+        var currentSegment = traceSegments.removeLast()
+        if let last = currentSegment.last {
+            let d = simd_length(fingerWorldPos - last)
+            if d < minTraceDistance {
+                traceSegments.append(currentSegment)
+                return
             }
         }
-        
-        // Add new trace point
-        tracePoints.append(fingerWorldPos)
-        
-        // Update visual representation
+        currentSegment.append(fingerWorldPos)
+        traceSegments.append(currentSegment)
         updateTraceVisualization(relativeTo: entity)
     }
-    
+
     // MARK: - Visualization
-    
-    /// Update the visual representation of the trace as a continuous line
+
     private func updateTraceVisualization(relativeTo entity: Entity) {
-        guard tracePoints.count >= 2 else {
-            // Remove line if not enough points
-            if let lineEntity = traceLineEntity {
-                traceContainer.removeChild(lineEntity)
-                traceLineEntity = nil
-            }
-            return
+        guard let segmentIndex = traceSegments.indices.last else { return }
+        let pts = traceSegments[segmentIndex]
+        guard pts.count >= 2 else { return }
+        let localPts = pts.map { entity.convert(position: $0, from: nil) }
+        let mesh = createTubeMesh(from: localPts, radius: lineWidth/2, radialSegments: 16)
+        let yellowMaterial = UnlitMaterial(color: UIColor(red: 1, green: 1, blue: 0, alpha: 1))
+        // Remove old entity if exists
+        if traceLineEntities[segmentIndex].parent != nil {
+            traceLineEntities[segmentIndex].removeFromParent()
         }
-        
-        // Convert world positions to local positions relative to the entity
-        let localPoints = tracePoints.map { worldPos in
-            entity.convert(position: worldPos, from: nil)
-        }
-        
-        // Create line mesh from points
-        let lineMesh = createLineMesh(from: localPoints, width: lineWidth)
-        
-        // Create or update line entity
-        if let existingLineEntity = traceLineEntity {
-            existingLineEntity.model?.mesh = lineMesh
-        } else {
-            let lineMaterial = SimpleMaterial(
-                color: .init(red: 0.5, green: 1.0, blue: 0.5, alpha: 0.8),
-                isMetallic: false
-            )
-            let lineEntity = ModelEntity(mesh: lineMesh, materials: [lineMaterial])
-            traceContainer.addChild(lineEntity)
-            traceLineEntity = lineEntity
-        }
+        let newEntity = ModelEntity(mesh: mesh, materials: [yellowMaterial])
+        traceContainer.addChild(newEntity)
+        traceLineEntities[segmentIndex] = newEntity
     }
-    
-    /// Create a line mesh from a series of points
-    private func createLineMesh(from points: [SIMD3<Float>], width: Float) -> MeshResource {
+
+    private func createTubeMesh(from pts: [SIMD3<Float>], radius: Float, radialSegments: Int = 12) -> MeshResource {
+        guard pts.count >= 2 else {
+            return MeshResource.generateSphere(radius: radius) // fallback for single point
+        }
         var vertices: [SIMD3<Float>] = []
-        var indices: [UInt32] = []
         var normals: [SIMD3<Float>] = []
-        
-        let halfWidth = width * 0.5
-        
-        for i in 0..<points.count {
-            let currentPoint = points[i]
-            
-            // Calculate direction vectors
-            let forward: SIMD3<Float>
+        var indices: [UInt32] = []
+
+        // Generate circle vertices for each point
+        for i in 0..<pts.count {
+            // Tangent direction
+            let dir: SIMD3<Float>
             if i == 0 {
-                forward = normalize(points[i + 1] - currentPoint)
-            } else if i == points.count - 1 {
-                forward = normalize(currentPoint - points[i - 1])
+                dir = normalize(pts[1] - pts[0])
+            } else if i == pts.count - 1 {
+                dir = normalize(pts[i] - pts[i-1])
             } else {
-                forward = normalize(points[i + 1] - points[i - 1])
+                dir = normalize(pts[i+1] - pts[i-1])
             }
-            
-            // Calculate perpendicular vector for width
-            let up = SIMD3<Float>(0, 1, 0)
-            let right = normalize(cross(forward, up))
-            let actualUp = normalize(cross(right, forward))
-            
-            // Create quad vertices for this segment
-            let v1 = currentPoint + right * halfWidth + actualUp * halfWidth
-            let v2 = currentPoint - right * halfWidth + actualUp * halfWidth
-            let v3 = currentPoint - right * halfWidth - actualUp * halfWidth
-            let v4 = currentPoint + right * halfWidth - actualUp * halfWidth
-            
-            let baseIndex = UInt32(vertices.count)
-            vertices.append(contentsOf: [v1, v2, v3, v4])
-            
-            // Add normals
-            let normal = actualUp
-            normals.append(contentsOf: [normal, normal, normal, normal])
-            
-            // Create triangles for the quad (if not the last point)
-            if i < points.count - 1 {
-                // Two triangles per quad
-                indices.append(contentsOf: [
-                    baseIndex, baseIndex + 1, baseIndex + 2,
-                    baseIndex, baseIndex + 2, baseIndex + 3
-                ])
+            // Find a vector not parallel to dir
+            let up = abs(dir.y) < 0.99 ? SIMD3<Float>(0,1,0) : SIMD3<Float>(1,0,0)
+            let right = normalize(cross(dir, up))
+            let actualUp = normalize(cross(right, dir))
+
+            for j in 0..<radialSegments {
+                let theta = 2 * Float.pi * Float(j) / Float(radialSegments)
+                let offset = cos(theta) * right * radius + sin(theta) * actualUp * radius
+                vertices.append(pts[i] + offset)
+                normals.append(normalize(offset))
             }
         }
-        
-        // Connect segments
-        for i in 0..<points.count - 1 {
-            let baseIndex = UInt32(i * 4)
-            let nextBaseIndex = UInt32((i + 1) * 4)
-            
-            // Connect the segments with triangles
-            indices.append(contentsOf: [
-                baseIndex, nextBaseIndex, baseIndex + 1,
-                nextBaseIndex, nextBaseIndex + 1, baseIndex + 1,
-                baseIndex + 1, nextBaseIndex + 1, baseIndex + 2,
-                nextBaseIndex + 1, nextBaseIndex + 2, baseIndex + 2,
-                baseIndex + 2, nextBaseIndex + 2, baseIndex + 3,
-                nextBaseIndex + 2, nextBaseIndex + 3, baseIndex + 3,
-                baseIndex + 3, nextBaseIndex + 3, baseIndex,
-                nextBaseIndex + 3, nextBaseIndex, baseIndex
-            ])
+        // Connect rings as triangle strips
+        let rings = pts.count
+        for i in 0..<rings-1 {
+            for j in 0..<radialSegments {
+                let current = UInt32(i * radialSegments + j)
+                let next = UInt32((i+1) * radialSegments + j)
+                let currentNext = UInt32(i * radialSegments + (j+1)%radialSegments)
+                let nextNext = UInt32((i+1)*radialSegments + (j+1)%radialSegments)
+                indices += [current, next, currentNext]
+                indices += [currentNext, next, nextNext]
+            }
         }
-        
-        var descriptor = MeshDescriptor(name: "TraceLine")
-        descriptor.positions = MeshBuffer(vertices)
-        descriptor.normals = MeshBuffer(normals)
-        descriptor.primitives = .triangles(indices)
-        
-        return try! MeshResource.generate(from: [descriptor])
+        var desc = MeshDescriptor(name: "TubeLine")
+        desc.positions = MeshBuffer(vertices)
+        desc.normals = MeshBuffer(normals)
+        desc.primitives = .triangles(indices)
+        return try! MeshResource.generate(from: [desc])
     }
-    
+
     // MARK: - Data Access
-    
-    /// Get the current trace as an array of world positions
+
     func getTracePoints() -> [SIMD3<Float>] {
-        return tracePoints
+        return traceSegments.flatMap { $0 }
     }
-    
-    /// Get the trace length in meters
+
     func getTraceLength() -> Float {
-        guard tracePoints.count > 1 else { return 0 }
-        
-        var totalLength: Float = 0
-        for i in 1..<tracePoints.count {
-            totalLength += simd_length(tracePoints[i] - tracePoints[i-1])
+        return traceSegments.reduce(0) { sum, segment in
+            guard segment.count > 1 else { return sum }
+            return sum + zip(segment, segment.dropFirst()).reduce(0) { $0 + simd_length($1.1 - $1.0) }
         }
-        return totalLength
     }
 }
