@@ -10,25 +10,19 @@ import simd
 
 @MainActor
 class FingerTracker {
-    // MARK: - Configuration
+
     private let lineWidth: Float = 0.005       // Width of the continuous line
     private let minTraceDistance: Float = 0    // Min distance to add a new point
     private let touchMargin: Float = 0.02      // 2 cm margin around box
 
-    // MARK: - Object geometry
     private let halfExtents: SIMD3<Float>      // Half the size of the object’s bounding box
 
-    // MARK: - State
     private(set) var isTracing: Bool = false
     private var traceSegments: [[SIMD3<Float>]] = []
     private var traceLineEntities: [ModelEntity] = []
 
-    // MARK: - Entities
     private let traceContainer: Entity
 
-    /// - Parameters:
-    ///   - parentEntity: the AR anchor’s root entity
-    ///   - objectExtents: full size of the object’s axis-aligned bounding box
     init(parentEntity: Entity, objectExtents: SIMD3<Float>) {
         self.halfExtents = objectExtents / 2
 
@@ -38,9 +32,6 @@ class FingerTracker {
         self.traceContainer = container
     }
 
-    // MARK: - Tracing Control
-
-    /// Start tracing without clearing any existing line
     func startTracing() {
         guard !isTracing else { return }
         isTracing = true
@@ -49,14 +40,12 @@ class FingerTracker {
         print("Started finger tracing")
     }
 
-    /// Stop tracing immediately
     func stopTracing() {
         guard isTracing else { return }
         isTracing = false
         print("Stopped finger tracing.")
     }
 
-    /// Clear all traces and entities
     func clearTrace() {
         for entity in traceLineEntities { entity.removeFromParent() }
         traceSegments.removeAll()
@@ -64,11 +53,6 @@ class FingerTracker {
         print("Cleared all finger traces")
     }
 
-    // MARK: - Trace Update
-
-    /// Called every frame with the fingertip’s world position.
-    /// If the fingertip enters the object’s bounding box (plus a margin), we stop tracing.
-    /// Otherwise, if still tracing, we append the new point and update the mesh.
     func updateFingerTrace(fingerWorldPos: SIMD3<Float>, relativeTo entity: Entity) {
         guard isTracing, !traceSegments.isEmpty else { return }
         var currentSegment = traceSegments.removeLast()
@@ -83,8 +67,6 @@ class FingerTracker {
         traceSegments.append(currentSegment)
         updateTraceVisualization(relativeTo: entity)
     }
-
-    // MARK: - Visualization
 
     private func updateTraceVisualization(relativeTo entity: Entity) {
         guard let segmentIndex = traceSegments.indices.last else { return }
@@ -110,9 +92,7 @@ class FingerTracker {
         var normals: [SIMD3<Float>] = []
         var indices: [UInt32] = []
 
-        // Generate circle vertices for each point
         for i in 0..<pts.count {
-            // Tangent direction
             let dir: SIMD3<Float>
             if i == 0 {
                 dir = normalize(pts[1] - pts[0])
@@ -121,7 +101,6 @@ class FingerTracker {
             } else {
                 dir = normalize(pts[i+1] - pts[i-1])
             }
-            // Find a vector not parallel to dir
             let up = abs(dir.y) < 0.99 ? SIMD3<Float>(0,1,0) : SIMD3<Float>(1,0,0)
             let right = normalize(cross(dir, up))
             let actualUp = normalize(cross(right, dir))
@@ -133,7 +112,6 @@ class FingerTracker {
                 normals.append(normalize(offset))
             }
         }
-        // Connect rings as triangle strips
         let rings = pts.count
         for i in 0..<rings-1 {
             for j in 0..<radialSegments {
@@ -151,8 +129,6 @@ class FingerTracker {
         desc.primitives = .triangles(indices)
         return try! MeshResource.generate(from: [desc])
     }
-
-    // MARK: - Data Access
 
     func getTracePoints() -> [SIMD3<Float>] {
         return traceSegments.flatMap { $0 }

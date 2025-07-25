@@ -22,7 +22,7 @@ struct HomeView: View {
     @Environment(\.openWindow) private var openWindow
     
     @State private var fileImporterIsOpen = false
-    @State private var showCongrats = false
+    @State private var showSummary = false
     
     @State var selectedReferenceObjectID: ReferenceObject.ID?
 
@@ -45,7 +45,7 @@ struct HomeView: View {
                     if appState.canEnterImmersiveSpace {
                         VStack {
                             if !appState.isImmersiveSpaceOpened {
-                                Button("Start Hand-Eye Coordination Assessment") {
+                                Button("Start Assessment") {
                                     Task {
                                         switch await openImmersiveSpace(id: immersiveSpaceIdentifier) {
                                         case .opened:
@@ -63,13 +63,13 @@ struct HomeView: View {
                             } else {
                                 HStack {
                                     Button("Reset") {
-                                        appState.resetAssessment()
+                                        //TODO
                                     }
                                     Button("Complete") {
                                         Task {
                                             await dismissImmersiveSpace()
                                             appState.didLeaveImmersiveSpace()
-                                            showCongrats = true
+                                            showSummary = true
                                         }
                                     }
                                 }
@@ -81,14 +81,6 @@ struct HomeView: View {
                                     }
                                 }
                             }
-                            
-                            Text(appState.isImmersiveSpaceOpened ?
-                                 "This leaves the immersive space." :
-                                 "This enters an immersive space, hiding all other apps."
-                            )
-                            .foregroundStyle(.secondary)
-                            .font(.footnote)
-                            .padding(.horizontal)
                         }
                     }
                 }
@@ -155,7 +147,7 @@ struct HomeView: View {
                 // Settings app to the foreground and changes authorizations there.
                 await appState.monitorSessionEvents()
             }
-            .navigationDestination(isPresented: $showCongrats) {
+            .navigationDestination(isPresented: $showSummary) {
                 SummaryView()
             }
         }
@@ -173,15 +165,7 @@ struct HomeView: View {
                         appState.referenceObjectLoader.removeObjects(atOffsets: indexSet)
                     }
                 }
-                .navigationTitle("Reference objects")
-
-                Button {
-                    fileImporterIsOpen = true
-                } label: {
-                    Image(systemName: "plus")
-                }
-                .padding(.leading)
-                .help("Add reference objects")
+                .navigationTitle("Hand-Eye Coordination Assessments")
             }
             .padding(.vertical)
             .disabled(appState.isImmersiveSpaceOpened)
@@ -215,11 +199,5 @@ struct HomeView: View {
                 }
             }
         }
-    }
-}
-
-extension AppState {
-    func resetAssessment() {
-        print("Reset assessment called")
     }
 }
