@@ -25,6 +25,7 @@ class ObjectAnchorVisualization {
     let entity: Entity
     
     private let headsetLineRenderer: HeadsetLineRenderer
+    private let zigZagLineRenderer: ZigZagLineRenderer
     private let fingerTracker: FingerTracker
     private let distanceCalculator: DistanceCalculator
     
@@ -53,6 +54,7 @@ class ObjectAnchorVisualization {
         
         // 2) Initialize components
         self.headsetLineRenderer = HeadsetLineRenderer(parentEntity: root)
+        self.zigZagLineRenderer = ZigZagLineRenderer(parentEntity: root)
         self.fingerTracker = FingerTracker(
             parentEntity: root,
             objectExtents: anchor.boundingBox.extent
@@ -71,7 +73,8 @@ class ObjectAnchorVisualization {
         guard anchor.isTracked,
               let devicePose = worldInfo.queryDeviceAnchor(atTimestamp: CACurrentMediaTime())
         else {
-            headsetLineRenderer.hideAllDots()
+            //headsetLineRenderer.hideAllDots()
+            zigZagLineRenderer.hideAllDots()
             return
         }
         
@@ -81,7 +84,12 @@ class ObjectAnchorVisualization {
         // Update the dotted line from headset to object
         let headsetPos = Transform(matrix: devicePose.originFromAnchorTransform).translation
         let objectPos = entity.transform.translation
-        headsetLineRenderer.updateDottedLine(
+//        headsetLineRenderer.updateDottedLine(
+//            from: headsetPos,
+//            to: objectPos,
+//            relativeTo: entity
+//        )
+        zigZagLineRenderer.updateZigZagLine(
             from: headsetPos,
             to: objectPos,
             relativeTo: entity
@@ -90,7 +98,8 @@ class ObjectAnchorVisualization {
     
     // MARK: - Finger Tracking Interface
     func startTracing() {
-        headsetLineRenderer.freezeDots()
+//        headsetLineRenderer.freezeDots()
+        zigZagLineRenderer.freezeDots()
         fingerTracker.startTracing()
         updateInstructionText()
     }
@@ -119,6 +128,14 @@ class ObjectAnchorVisualization {
     
     func getTraceLength() -> Float {
         fingerTracker.getTraceLength()
+    }
+    
+    func showZigZagLine() {
+        zigZagLineRenderer.showAllDots()
+    }
+
+    func hideZigZagLine() {
+        zigZagLineRenderer.hideAllDots()
     }
     
     // MARK: - Distance Interface

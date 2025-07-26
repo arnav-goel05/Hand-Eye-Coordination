@@ -13,6 +13,7 @@
 		396786E12B7A5CF8007A056F /* ReferenceObjectLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 396786E02B7A5CF8007A056F /* ReferenceObjectLoader.swift */; };
 		A72DB5A22E31D247002CA225 /* Cocoa.referenceobject in Sources */ = {isa = PBXBuildFile; fileRef = A72DB5A12E31D247002CA225 /* Cocoa.referenceobject */; };
 		A7827E6D2E241302002C513C /* SummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7827E6C2E2412F3002C513C /* SummaryView.swift */; };
+		A7C39B072E33D81B006D756B /* ZigZagLineRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C39B062E33D66C006D756B /* ZigZagLineRenderer.swift */; };
 		A7DEC3BA2E202290000FF2CF /* FingerTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7DEC3B92E20228B000FF2CF /* FingerTracker.swift */; };
 		A7DEC3BC2E20229B000FF2CF /* DistanceCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7DEC3BB2E202296000FF2CF /* DistanceCalculator.swift */; };
 		A7DEC3BE2E2022A8000FF2CF /* HeadsetLineRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7DEC3BD2E2022A1000FF2CF /* HeadsetLineRenderer.swift */; };
@@ -35,6 +36,7 @@
 		A6D7F03CD75409349B2BFF2D /* SampleCode.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = SampleCode.xcconfig; path = Configuration/SampleCode.xcconfig; sourceTree = "<group>"; };
 		A72DB5A12E31D247002CA225 /* Cocoa.referenceobject */ = {isa = PBXFileReference; lastKnownFileType = file.referenceobject; path = Cocoa.referenceobject; sourceTree = "<group>"; };
 		A7827E6C2E2412F3002C513C /* SummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SummaryView.swift; sourceTree = "<group>"; };
+		A7C39B062E33D66C006D756B /* ZigZagLineRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZigZagLineRenderer.swift; sourceTree = "<group>"; };
 		A7DEC3B92E20228B000FF2CF /* FingerTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FingerTracker.swift; sourceTree = "<group>"; };
 		A7DEC3BB2E202296000FF2CF /* DistanceCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DistanceCalculator.swift; sourceTree = "<group>"; };
 		A7DEC3BD2E2022A1000FF2CF /* HeadsetLineRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeadsetLineRenderer.swift; sourceTree = "<group>"; };
@@ -135,6 +137,7 @@
 		EBF0DF0E2AEFFDB900ABF63C /* App */ = {
 			isa = PBXGroup;
 			children = (
+				A7C39B062E33D66C006D756B /* ZigZagLineRenderer.swift */,
 				A7DEC3BD2E2022A1000FF2CF /* HeadsetLineRenderer.swift */,
 				A7DEC3BB2E202296000FF2CF /* DistanceCalculator.swift */,
 				A7DEC3B92E20228B000FF2CF /* FingerTracker.swift */,
@@ -230,6 +233,7 @@
 				A7DEC3BE2E2022A8000FF2CF /* HeadsetLineRenderer.swift in Sources */,
 				396786E12B7A5CF8007A056F /* ReferenceObjectLoader.swift in Sources */,
 				A72DB5A22E31D247002CA225 /* Cocoa.referenceobject in Sources */,
+				A7C39B072E33D81B006D756B /* ZigZagLineRenderer.swift in Sources */,
 				EBDA9DAC2AD44D140040C78E /* ObjectTrackingRealityView.swift in Sources */,
 				EBA142DF2AD431AD00FB20AD /* HomeView.swift in Sources */,
 				A7827E6D2E241302002C513C /* SummaryView.swift in Sources */,
