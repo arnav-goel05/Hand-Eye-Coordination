@@ -20,6 +20,7 @@ struct HomeView: View {
     @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.openWindow) private var openWindow
+    @EnvironmentObject var dataManager: DataManager
     
     @State private var fileImporterIsOpen = false
     @State private var showSummary = false
@@ -65,11 +66,19 @@ struct HomeView: View {
                                     Button("Reset") {
                                         //TODO
                                     }
-                                    Button("Complete") {
-                                        Task {
-                                            await dismissImmersiveSpace()
-                                            appState.didLeaveImmersiveSpace()
-                                            showSummary = true
+                                    if dataManager.currentStep == .straight {
+                                        Button("Proceed") {
+                                            Task {
+                                                dataManager.nextStep()
+                                            }
+                                        }
+                                    } else {
+                                        Button("Complete") {
+                                            Task {
+                                                await dismissImmersiveSpace()
+                                                appState.didLeaveImmersiveSpace()
+                                                showSummary = true
+                                            }
                                         }
                                     }
                                 }

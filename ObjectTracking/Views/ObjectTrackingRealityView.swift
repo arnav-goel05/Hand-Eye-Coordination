@@ -152,6 +152,11 @@ struct ObjectTrackingRealityView: View {
             
             appState.didLeaveImmersiveSpace()
         }
+        .onChange(of: dataManager.stepDidChange) { _, _ in
+            for viz in objectVisualizations.values {
+                viz.resetVisualizations()
+            }
+        }
     }
     
     // MARK: - Button Positioning

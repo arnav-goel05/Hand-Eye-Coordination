@@ -13,8 +13,8 @@ import UIKit
 class ZigZagLineRenderer {
     // MARK: - Configuration
     private let dotRadius: Float = 0.0015
-    private let dotSpacing: Float = 0.001
-    private let maxDots: Int = Int(5.0 / 0.001) // Maximum line length of 5 meters
+    private let dotSpacing: Float = 0.002
+    private let maxDots: Int = Int(5.0 / 0.002) // Maximum line length of 5 meters
     private let zigZagAmplitude: Float = 0.05 // How far the zig-zag shifts left/right
     private let zigZagFrequency: Int = 4 // Number of zig-zags
 
@@ -48,7 +48,7 @@ class ZigZagLineRenderer {
     private func createDotPool() {
         let sphereMesh = MeshResource.generateSphere(radius: dotRadius)
         let sphereMaterial = SimpleMaterial(
-            color: .init(red: 255, green: 255, blue: 255, alpha: 1),
+            color: .init(red: 1, green: 1, blue: 1, alpha: 1),
             isMetallic: false
         )
 
@@ -141,8 +141,7 @@ class ZigZagLineRenderer {
         alpha: Float? = nil
     ) {
         let newRadius = radius ?? dotRadius
-        let newColor = color ?? UIColor.red
-        let newAlpha = alpha ?? 0.8
+        let newAlpha = alpha ?? 1
 
         let shouldUpdateMesh = radius != nil
         let shouldUpdateMaterial = color != nil || alpha != nil
@@ -154,7 +153,7 @@ class ZigZagLineRenderer {
 
             let material = shouldUpdateMaterial
                 ? SimpleMaterial(
-                    color: .init(red: 1, green: 0, blue: 0, alpha: CGFloat(newAlpha)),
+                    color: .init(red: 1, green: 1, blue: 1, alpha: CGFloat(newAlpha)),
                     isMetallic: false
                 )
                 : nil

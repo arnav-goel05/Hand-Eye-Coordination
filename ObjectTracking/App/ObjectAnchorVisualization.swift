@@ -73,8 +73,7 @@ class ObjectAnchorVisualization {
         guard anchor.isTracked,
               let devicePose = worldInfo.queryDeviceAnchor(atTimestamp: CACurrentMediaTime())
         else {
-            //headsetLineRenderer.hideAllDots()
-            zigZagLineRenderer.hideAllDots()
+            dataManager.currentStep == .straight ? headsetLineRenderer.hideAllDots() : zigZagLineRenderer.hideAllDots()
             return
         }
         
@@ -84,22 +83,24 @@ class ObjectAnchorVisualization {
         // Update the dotted line from headset to object
         let headsetPos = Transform(matrix: devicePose.originFromAnchorTransform).translation
         let objectPos = entity.transform.translation
-//        headsetLineRenderer.updateDottedLine(
-//            from: headsetPos,
-//            to: objectPos,
-//            relativeTo: entity
-//        )
-        zigZagLineRenderer.updateZigZagLine(
-            from: headsetPos,
-            to: objectPos,
-            relativeTo: entity
-        )
+        if dataManager.currentStep == .straight {
+                    headsetLineRenderer.updateDottedLine(
+                        from: headsetPos,
+                        to: objectPos,
+                        relativeTo: entity
+                    )
+        } else {
+            zigZagLineRenderer.updateZigZagLine(
+                from: headsetPos,
+                to: objectPos,
+                relativeTo: entity
+            )
+        }
     }
     
     // MARK: - Finger Tracking Interface
     func startTracing() {
-//        headsetLineRenderer.freezeDots()
-        zigZagLineRenderer.freezeDots()
+        dataManager.currentStep == .straight ? headsetLineRenderer.freezeDots() : zigZagLineRenderer.freezeDots()
         fingerTracker.startTracing()
         updateInstructionText()
     }
@@ -156,6 +157,14 @@ class ObjectAnchorVisualization {
             fingerWorldPos: fingerWorldPos,
             objectWorldPos: entity.transform.translation
         )
+    }
+    
+    /// Call this to remove pooled dots (all line renderers) and clear finger tracing
+    func resetVisualizations() {
+        headsetLineRenderer.hideAllDots()
+        zigZagLineRenderer.hideAllDots()
+        fingerTracker.clearTrace()
+        updateInstructionText()
     }
     
     // MARK: - Window Pane Creation

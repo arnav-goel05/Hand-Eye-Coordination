@@ -8,10 +8,18 @@
 
 import SwiftUI
 
+enum step {
+    case straight
+    case zigzag
+}
+
 class DataManager: ObservableObject {
     @Published var totalTraceLength: Float = 0
     @Published var maxAmplitude: Float = 0
     @Published var averageAmplitude: Float = 0
+    @Published var currentStep: step = .straight
+    @Published var stepDidChange: Bool = false
+    
     
     func setTotalTraceLength(_ length: Float) {
         self.totalTraceLength = length
@@ -24,4 +32,10 @@ class DataManager: ObservableObject {
     func setAverageAmplitude(_ amplitude: Float) {
         self.averageAmplitude = amplitude
     }
+    
+    func nextStep() {
+        currentStep = .zigzag
+        stepDidChange.toggle()
+    }
 }
+
