@@ -18,9 +18,20 @@ class DataManager: ObservableObject {
     @Published var totalTraceLength: Float = 0
     @Published var maxAmplitude: Float = 0
     @Published var averageAmplitude: Float = 0
+    
+    @Published var straightHeadsetPosition: SIMD3<Float>? = nil
+    @Published var straightObjectPosition: SIMD3<Float>? = nil
+    @Published var zigzagBeginnerHeadsetPosition: SIMD3<Float>? = nil
+    @Published var zigzagBeginnerObjectPosition: SIMD3<Float>? = nil
+    @Published var zigzagAdvancedHeadsetPosition: SIMD3<Float>? = nil
+    @Published var zigzagAdvancedObjectPosition: SIMD3<Float>? = nil
+    
     @Published var currentStep: step = .straight
     @Published var stepDidChange: Bool = false
-    
+
+    @Published var straightUserTrace: [SIMD3<Float>] = []
+    @Published var zigzagBeginnerUserTrace: [SIMD3<Float>] = []
+    @Published var zigzagAdvancedUserTrace: [SIMD3<Float>] = []
     
     func setTotalTraceLength(_ length: Float) {
         self.totalTraceLength = length
@@ -41,6 +52,22 @@ class DataManager: ObservableObject {
             currentStep = .zigzagAdvanced
         }
         stepDidChange.toggle()
+    }
+
+    func setUserTrace(_ trace: [SIMD3<Float>], for step: step) {
+        switch step {
+        case .straight: straightUserTrace = trace
+        case .zigzagBeginner: zigzagBeginnerUserTrace = trace
+        case .zigzagAdvanced: zigzagAdvancedUserTrace = trace
+        }
+    }
+
+    func getUserTrace(for step: step) -> [SIMD3<Float>] {
+        switch step {
+        case .straight: return straightUserTrace
+        case .zigzagBeginner: return zigzagBeginnerUserTrace
+        case .zigzagAdvanced: return zigzagAdvancedUserTrace
+        }
     }
 }
 

@@ -77,24 +77,30 @@ class ObjectAnchorVisualization {
         
         let headsetPos = Transform(matrix: devicePose.originFromAnchorTransform).translation
         let objectPos = entity.transform.translation
+        // Move headsetPos and objectPos closer to each other by t
+        let t1: Float = 0.25 // t=0.0 (original positions), t=1.0 (swapped)
+        let t2: Float = 0.075
+        let closerHeadsetPos = simd_mix(headsetPos, objectPos, SIMD3<Float>(repeating: t1))
+        let closerObjectPos = simd_mix(objectPos, headsetPos, SIMD3<Float>(repeating: t2))
+        
         if dataManager.currentStep == .straight {
                     straightLineRenderer.updateDottedLine(
-                        from: headsetPos,
-                        to: objectPos,
+                        from: closerHeadsetPos,
+                        to: closerObjectPos,
                         relativeTo: entity
                     )
         } else if dataManager.currentStep == .zigzagBeginner {
             zigZagLineRendererBeginner.updateZigZagLine(
-                from: headsetPos,
-                to: objectPos,
+                from: closerHeadsetPos,
+                to: closerObjectPos,
                 relativeTo: entity,
                 amplitude: 0.05,
                 frequency: 4
             )
         } else {
             zigZagLineRendererAdvanced.updateZigZagLine(
-                from: headsetPos,
-                to: objectPos,
+                from: closerHeadsetPos,
+                to: closerObjectPos,
                 relativeTo: entity,
                 amplitude: 0.05,
                 frequency: 8
@@ -115,6 +121,29 @@ class ObjectAnchorVisualization {
     
     func stopTracing() {
         fingerTracker.stopTracing()
+        let stepType = dataManager.currentStep
+        let userTrace = fingerTracker.getTracePoints()
+        let headsetPos = Transform(matrix: worldInfo.queryDeviceAnchor(atTimestamp: CACurrentMediaTime())?.originFromAnchorTransform ?? matrix_identity_float4x4).translation
+        let objectPos = entity.transform.translation
+        
+        // Interpolate positions to move them closer as in update(with:)
+        let t1: Float = 0.25
+        let t2: Float = 0.075
+        let closerHeadsetPos = simd_mix(headsetPos, objectPos, SIMD3<Float>(repeating: t1))
+        let closerObjectPos = simd_mix(objectPos, headsetPos, SIMD3<Float>(repeating: t2))
+        
+        switch stepType {
+        case .straight:
+            dataManager.straightHeadsetPosition = closerHeadsetPos
+            dataManager.straightObjectPosition = closerObjectPos
+        case .zigzagBeginner:
+            dataManager.zigzagBeginnerHeadsetPosition = closerHeadsetPos
+            dataManager.zigzagBeginnerObjectPosition = closerObjectPos
+        case .zigzagAdvanced:
+            dataManager.zigzagAdvancedHeadsetPosition = closerHeadsetPos
+            dataManager.zigzagAdvancedObjectPosition = closerObjectPos
+        }
+        dataManager.setUserTrace(userTrace, for: stepType)
         updateInstructionText()
     }
     
@@ -163,9 +192,18 @@ class ObjectAnchorVisualization {
     }
     
     func distanceFromFinger(to fingerWorldPos: SIMD3<Float>) -> Float? {
+        // Instead of using original positions, interpolate headsetPos and objectPos like in update(with:)
+        let headsetPos = Transform(matrix: worldInfo.queryDeviceAnchor(atTimestamp: CACurrentMediaTime())?.originFromAnchorTransform ?? matrix_identity_float4x4).translation
+        let objectPos = entity.transform.translation
+        
+        let t1: Float = 0.25
+        let t2: Float = 0.075
+        let closerHeadsetPos = simd_mix(headsetPos, objectPos, SIMD3<Float>(repeating: t1))
+        let closerObjectPos = simd_mix(objectPos, headsetPos, SIMD3<Float>(repeating: t2))
+        
         return distanceCalculator.distanceFromFingerToLine(
             fingerWorldPos: fingerWorldPos,
-            objectWorldPos: entity.transform.translation
+            objectWorldPos: closerHeadsetPos,
         )
     }
     
@@ -286,16 +324,23 @@ class ObjectAnchorVisualization {
         
         let headsetPos = Transform(matrix: devicePose.originFromAnchorTransform).translation
         let objectPos  = entity.transform.translation
-        let lineVec    = objectPos - headsetPos
+        
+        // Interpolate positions to move them closer as in update(with:)
+        let t1: Float = 0.25
+        let t2: Float = 0.075
+        let closerHeadsetPos = simd_mix(headsetPos, objectPos, SIMD3<Float>(repeating: t1))
+        let closerObjectPos = simd_mix(objectPos, headsetPos, SIMD3<Float>(repeating: t2))
+        
+        let lineVec    = closerObjectPos - closerHeadsetPos
         let lineLen    = simd_length(lineVec)
         guard lineLen > 0 else { return [] }
         
         let normLine = lineVec / lineLen
         
         return fingerTracker.getTracePoints().map { pt in
-            let vecToPt        = pt - headsetPos
+            let vecToPt        = pt - closerHeadsetPos
             let projLen        = simd_dot(vecToPt, normLine)
-            let closestOnLine  = headsetPos + normLine * projLen
+            let closestOnLine  = closerHeadsetPos + normLine * projLen
             return simd_length(pt - closestOnLine)
         }
     }
@@ -314,4 +359,3 @@ class ObjectAnchorVisualization {
         dataManager.setAverageAmplitude(avgAmp)
     }
 }
-

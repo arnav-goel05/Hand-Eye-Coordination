@@ -14,6 +14,7 @@
 		A72DB5A22E31D247002CA225 /* Cocoa.referenceobject in Sources */ = {isa = PBXBuildFile; fileRef = A72DB5A12E31D247002CA225 /* Cocoa.referenceobject */; };
 		A77B24CA2E36190600C4C891 /* Styles.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77B24C92E36190600C4C891 /* Styles.swift */; };
 		A7827E6D2E241302002C513C /* SummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7827E6C2E2412F3002C513C /* SummaryView.swift */; };
+		A79D9CB22E365812006DD451 /* SummaryImmersiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A79D9CB12E365812006DD451 /* SummaryImmersiveView.swift */; };
 		A7C39B072E33D81B006D756B /* ZigZagLineRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C39B062E33D66C006D756B /* ZigZagLineRenderer.swift */; };
 		A7DEC3BA2E202290000FF2CF /* FingerTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7DEC3B92E20228B000FF2CF /* FingerTracker.swift */; };
 		A7DEC3BC2E20229B000FF2CF /* DistanceCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7DEC3BB2E202296000FF2CF /* DistanceCalculator.swift */; };
@@ -38,6 +39,7 @@
 		A72DB5A12E31D247002CA225 /* Cocoa.referenceobject */ = {isa = PBXFileReference; lastKnownFileType = file.referenceobject; path = Cocoa.referenceobject; sourceTree = "<group>"; };
 		A77B24C92E36190600C4C891 /* Styles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Styles.swift; sourceTree = "<group>"; };
 		A7827E6C2E2412F3002C513C /* SummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SummaryView.swift; sourceTree = "<group>"; };
+		A79D9CB12E365812006DD451 /* SummaryImmersiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SummaryImmersiveView.swift; sourceTree = "<group>"; };
 		A7C39B062E33D66C006D756B /* ZigZagLineRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZigZagLineRenderer.swift; sourceTree = "<group>"; };
 		A7DEC3B92E20228B000FF2CF /* FingerTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FingerTracker.swift; sourceTree = "<group>"; };
 		A7DEC3BB2E202296000FF2CF /* DistanceCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DistanceCalculator.swift; sourceTree = "<group>"; };
@@ -135,6 +137,7 @@
 				EBDA9DAB2AD44D140040C78E /* ObjectTrackingRealityView.swift */,
 				EB5034142AF137FA0020B48F /* InfoLabel.swift */,
 				E18F5F992BBD6C6500D9BFF2 /* ListEntryView.swift */,
+				A79D9CB12E365812006DD451 /* SummaryImmersiveView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -244,6 +247,7 @@
 				EBA142DF2AD431AD00FB20AD /* HomeView.swift in Sources */,
 				A7827E6D2E241302002C513C /* SummaryView.swift in Sources */,
 				394D18CF2A960EB9009E3A2E /* ObjectTrackingApp.swift in Sources */,
+				A79D9CB22E365812006DD451 /* SummaryImmersiveView.swift in Sources */,
 				A7DEC3BC2E20229B000FF2CF /* DistanceCalculator.swift in Sources */,
 				A77B24CA2E36190600C4C891 /* Styles.swift in Sources */,
 				396786C62B766C54007A056F /* ObjectAnchorVisualization.swift in Sources */,
