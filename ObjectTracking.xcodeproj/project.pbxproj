@@ -12,6 +12,7 @@
 		396786C62B766C54007A056F /* ObjectAnchorVisualization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 396786C52B766C44007A056F /* ObjectAnchorVisualization.swift */; };
 		396786E12B7A5CF8007A056F /* ReferenceObjectLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 396786E02B7A5CF8007A056F /* ReferenceObjectLoader.swift */; };
 		A72DB5A22E31D247002CA225 /* Cocoa.referenceobject in Sources */ = {isa = PBXBuildFile; fileRef = A72DB5A12E31D247002CA225 /* Cocoa.referenceobject */; };
+		A77B24CA2E36190600C4C891 /* Styles.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77B24C92E36190600C4C891 /* Styles.swift */; };
 		A7827E6D2E241302002C513C /* SummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7827E6C2E2412F3002C513C /* SummaryView.swift */; };
 		A7C39B072E33D81B006D756B /* ZigZagLineRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C39B062E33D66C006D756B /* ZigZagLineRenderer.swift */; };
 		A7DEC3BA2E202290000FF2CF /* FingerTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7DEC3B92E20228B000FF2CF /* FingerTracker.swift */; };
@@ -35,6 +36,7 @@
 		8B0AF4162C3EEDDA0076F08A /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		A6D7F03CD75409349B2BFF2D /* SampleCode.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = SampleCode.xcconfig; path = Configuration/SampleCode.xcconfig; sourceTree = "<group>"; };
 		A72DB5A12E31D247002CA225 /* Cocoa.referenceobject */ = {isa = PBXFileReference; lastKnownFileType = file.referenceobject; path = Cocoa.referenceobject; sourceTree = "<group>"; };
+		A77B24C92E36190600C4C891 /* Styles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Styles.swift; sourceTree = "<group>"; };
 		A7827E6C2E2412F3002C513C /* SummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SummaryView.swift; sourceTree = "<group>"; };
 		A7C39B062E33D66C006D756B /* ZigZagLineRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZigZagLineRenderer.swift; sourceTree = "<group>"; };
 		A7DEC3B92E20228B000FF2CF /* FingerTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FingerTracker.swift; sourceTree = "<group>"; };
@@ -50,6 +52,7 @@
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		A750C6292E333988009A880C /* ViewModels */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = ViewModels; sourceTree = "<group>"; };
+		A77B24CB2E36191E00C4C891 /* Modifiers */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Modifiers; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -96,12 +99,14 @@
 		394D18C92A960EB9009E3A2E /* ObjectTracking */ = {
 			isa = PBXGroup;
 			children = (
+				A77B24CB2E36191E00C4C891 /* Modifiers */,
 				A750C6292E333988009A880C /* ViewModels */,
 				394D18CE2A960EB9009E3A2E /* ObjectTrackingApp.swift */,
 				EBDA9DAD2AD44E270040C78E /* Views */,
 				EBF0DF0E2AEFFDB900ABF63C /* App */,
 				EBF0DF0F2AEFFE1400ABF63C /* Extensions */,
 				393E4AAD2A96284F005C9691 /* Info.plist */,
+				A77B24C92E36190600C4C891 /* Styles.swift */,
 			);
 			path = ObjectTracking;
 			sourceTree = "<group>";
@@ -173,6 +178,7 @@
 			);
 			fileSystemSynchronizedGroups = (
 				A750C6292E333988009A880C /* ViewModels */,
+				A77B24CB2E36191E00C4C891 /* Modifiers */,
 			);
 			name = ObjectTracking;
 			productName = ObjectTracking;
@@ -239,6 +245,7 @@
 				A7827E6D2E241302002C513C /* SummaryView.swift in Sources */,
 				394D18CF2A960EB9009E3A2E /* ObjectTrackingApp.swift in Sources */,
 				A7DEC3BC2E20229B000FF2CF /* DistanceCalculator.swift in Sources */,
+				A77B24CA2E36190600C4C891 /* Styles.swift in Sources */,
 				396786C62B766C54007A056F /* ObjectAnchorVisualization.swift in Sources */,
 				393E4AB02A9629A7005C9691 /* Entity+ObjectTracking.swift in Sources */,
 				E18F5F9A2BBD6C6500D9BFF2 /* ListEntryView.swift in Sources */,

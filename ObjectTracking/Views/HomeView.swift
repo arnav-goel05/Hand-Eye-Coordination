@@ -26,90 +26,103 @@ struct HomeView: View {
     @State private var showSummary = false
     
     @State var selectedReferenceObjectID: ReferenceObject.ID?
-
+    
+    @State private var titleText = ""
+    @State private var isTitleFinished = false
+    private let finalTitle = "Hand-Eye Coordination Assessment"
+    
     var body: some View {
         NavigationStack {
             Group {
                 if appState.canEnterImmersiveSpace {
-                    referenceObjectList
-                        .frame(minWidth: 400, minHeight: 300)
+                    if !appState.isImmersiveSpaceOpened {
+                        VStack(spacing: 50) {
+                            Text(finalTitle)
+                                .font(.system(size: 45, weight: .bold, design: .monospaced))
+                                .multilineTextAlignment(.center)
+                                .lineLimit(1)
+                                .fixedSize(horizontal: true, vertical: false)
+                                .hidden()
+                                .overlay(alignment: .leading) {
+                                    Text(titleText)
+                                        .font(.system(size: 45, weight: .bold, design: .monospaced))
+                                        .multilineTextAlignment(.center)
+                                        .lineLimit(1)
+                                        .fixedSize(horizontal: true, vertical: false)
+                                }
+                            
+                            Button(action: {
+                                Task {
+                                    switch await openImmersiveSpace(id: immersiveSpaceIdentifier) {
+                                    case .opened:
+                                        break
+                                    case .error:
+                                        print("An error occurred when trying to open the immersive space \(immersiveSpaceIdentifier)")
+                                    case .userCancelled:
+                                        print("The user declined opening immersive space \(immersiveSpaceIdentifier)")
+                                    @unknown default:
+                                        break
+                                    }
+                                }
+                            }) {
+                                Text("Start Assessment")
+                                    .buttonTextStyle()
+                            }
+                            .disabled(!isTitleFinished)
+                            .opacity(isTitleFinished ? 1 : 0)
+                            .animation(.easeIn(duration: 0.4), value: isTitleFinished)
+                            .allowsHitTesting(isTitleFinished)
+                            .disabled(!appState.canEnterImmersiveSpace || appState.referenceObjectLoader.enabledReferenceObjectsCount == 0)
+                        }
+                        .typeText(
+                            text: $titleText,
+                            finalText: finalTitle,
+                            isFinished: $isTitleFinished,
+                            isAnimated: !isTitleFinished
+                        )
+                    } else {
+                        HStack(spacing: 50) {
+                            Button(action: {
+                                //TODO
+                            }) {
+                                Text("Reset")
+                                    .buttonTextStyle()
+                            }
+                            if dataManager.currentStep == .straight {
+                                Button(action: {
+                                    Task {
+                                        dataManager.nextStep()
+                                    }
+                                }) {
+                                    Text("Next")
+                                        .buttonTextStyle()
+                                }
+                            } else {
+                                Button(action: {
+                                    Task {
+                                        await dismissImmersiveSpace()
+                                        appState.didLeaveImmersiveSpace()
+                                        showSummary = true
+                                    }
+                                }) {
+                                    Text("Complete")
+                                        .buttonTextStyle()
+                                }
+                            }
+                        }
+                        
+                        if !appState.objectTrackingStartedRunning {
+                            HStack {
+                                ProgressView()
+                                Text("Please wait until all reference objects have been loaded")
+                            }
+                        }
+                    }
                 } else {
                     InfoLabel(appState: appState)
                         .padding(.horizontal, 30)
                         .frame(minWidth: 400, minHeight: 300)
                         .fixedSize()
-                }
-            }
-            .glassBackgroundEffect()
-            .toolbar {
-                ToolbarItem(placement: .bottomOrnament) {
-                    if appState.canEnterImmersiveSpace {
-                        VStack {
-                            if !appState.isImmersiveSpaceOpened {
-                                Button("Start Assessment") {
-                                    Task {
-                                        switch await openImmersiveSpace(id: immersiveSpaceIdentifier) {
-                                        case .opened:
-                                            break
-                                        case .error:
-                                            print("An error occurred when trying to open the immersive space \(immersiveSpaceIdentifier)")
-                                        case .userCancelled:
-                                            print("The user declined opening immersive space \(immersiveSpaceIdentifier)")
-                                        @unknown default:
-                                            break
-                                        }
-                                    }
-                                }
-                                .disabled(!appState.canEnterImmersiveSpace || appState.referenceObjectLoader.enabledReferenceObjectsCount == 0)
-                            } else {
-                                HStack {
-                                    Button("Reset") {
-                                        //TODO
-                                    }
-                                    if dataManager.currentStep == .straight {
-                                        Button("Proceed") {
-                                            Task {
-                                                dataManager.nextStep()
-                                            }
-                                        }
-                                    } else {
-                                        Button("Complete") {
-                                            Task {
-                                                await dismissImmersiveSpace()
-                                                appState.didLeaveImmersiveSpace()
-                                                showSummary = true
-                                            }
-                                        }
-                                    }
-                                }
-                                
-                                if !appState.objectTrackingStartedRunning {
-                                    HStack {
-                                        ProgressView()
-                                        Text("Please wait until all reference objects have been loaded")
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            .fileImporter(isPresented: $fileImporterIsOpen, allowedContentTypes: [referenceObjectUTType], allowsMultipleSelection: true) { results in
-                switch results {
-                case .success(let fileURLs):
-                    Task {
-                        // Try to load each selected file as a reference object.
-                        for fileURL in fileURLs {
-                            guard fileURL.startAccessingSecurityScopedResource() else {
-                                print("Failed to get sandboxed access to the file \(fileURL)")
-                                return
-                            }
-                            await appState.referenceObjectLoader.addReferenceObject(fileURL)
-                            fileURL.stopAccessingSecurityScopedResource()
-                        }
-                    }
-                case .failure(let error):
-                    print("Failed to open file with error: \(error)")
                 }
             }
             .onChange(of: scenePhase, initial: true) {
@@ -161,52 +174,5 @@ struct HomeView: View {
             }
         }
     }
-    
-    @MainActor
-    var referenceObjectList: some View {
-        NavigationSplitView {
-            VStack(alignment: .leading) {
-                List(selection: $selectedReferenceObjectID) {
-                    ForEach(appState.referenceObjectLoader.referenceObjects, id: \.id) { referenceObject in
-                        ListEntryView(referenceObject: referenceObject, referenceObjectLoader: appState.referenceObjectLoader)
-                    }
-                    .onDelete { indexSet in
-                        appState.referenceObjectLoader.removeObjects(atOffsets: indexSet)
-                    }
-                }
-                .navigationTitle("Hand-Eye Coordination Assessments")
-            }
-            .padding(.vertical)
-            .disabled(appState.isImmersiveSpaceOpened)
-            
-        } detail: {
-            if !appState.referenceObjectLoader.didFinishLoading {
-                VStack {
-                    Text("Loading reference objects…")
-                    ProgressView(value: appState.referenceObjectLoader.progress)
-                        .frame(maxWidth: 200)
-                }
-            } else if appState.referenceObjectLoader.referenceObjects.isEmpty {
-                Text("Tap the + button to add reference objects, or include some in the 'Reference Objects' group of the app's Xcode project.")
-            } else {
-                if let selectedObject = appState.referenceObjectLoader.referenceObjects.first(where: { $0.id == selectedReferenceObjectID }) {
-                    // Display the USDZ file that the reference object was displayed on in this detail view.
-                    if let path = selectedObject.usdzFile, !fileImporterIsOpen {
-                        Model3D(url: path) { model in
-                            model
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .scaleEffect(0.5)
-                        } placeholder: {
-                            ProgressView()
-                        }
-                    } else {
-                        Text("No preview available")
-                    }
-                } else {
-                    Text("No object selected")
-                }
-            }
-        }
-    }
 }
+
