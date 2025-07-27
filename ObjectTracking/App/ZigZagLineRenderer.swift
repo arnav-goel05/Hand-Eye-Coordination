@@ -15,8 +15,6 @@ class ZigZagLineRenderer {
     private let dotRadius: Float = 0.0015
     private let dotSpacing: Float = 0.001 // Reduced spacing for dense line
     private let maxDots: Int = 1000       // Capped to prevent performance issues
-    private let zigZagAmplitude: Float = 0.05
-    private let zigZagFrequency: Int = 4
 
     // MARK: - State
     private var isFrozen: Bool = false // When true, skip updates
@@ -60,13 +58,12 @@ class ZigZagLineRenderer {
         }
     }
 
-    // MARK: - Zig-Zag Path Calculation
-
-    /// Generate a zig-zag path from `from` to `to`, returning dotCount + 1 points
     private func computeZigZagPoints(
         from start: SIMD3<Float>,
         to end: SIMD3<Float>,
-        count dotCount: Int
+        count dotCount: Int,
+        amplitude: Float,
+        frequency: Int
     ) -> [SIMD3<Float>] {
         guard dotCount > 0 else { return [start, end] }
         let direction = normalize(end - start)
@@ -81,9 +78,9 @@ class ZigZagLineRenderer {
             let point = start + direction * (totalLength * t)
 
             // Zig-zag offset: alternate left/right (sin wave for smoothness)
-            let phase = Float(i) * Float(zigZagFrequency) * .pi / Float(dotCount)
-            let amplitude = (i == 0 || i == dotCount) ? 0 : zigZagAmplitude * sin(phase)
-            let offset = right * amplitude
+            let phase = Float(i) * Float(frequency) * .pi / Float(dotCount)
+            let amp = (i == 0 || i == dotCount) ? 0 : amplitude * sin(phase)
+            let offset = right * amp
 
             points.append(point + offset)
         }
@@ -95,10 +92,18 @@ class ZigZagLineRenderer {
 
     /// Update the zig-zag dotted-line visualization from headset to object.
     /// If `freezeDots()` has been called, this will early-exit.
+    /// - Parameters:
+    ///   - headsetPos: Position of the headset.
+    ///   - objectPos: Position of the target object.
+    ///   - entity: Reference entity for position conversion.
+    ///   - amplitude: Amplitude of the zig-zag offset.
+    ///   - frequency: Frequency of the zig-zag oscillations.
     func updateZigZagLine(
         from headsetPos: SIMD3<Float>,
         to objectPos: SIMD3<Float>,
-        relativeTo entity: Entity
+        relativeTo entity: Entity,
+        amplitude: Float,
+        frequency: Int
     ) {
         guard !isFrozen else { return }
 
@@ -111,7 +116,7 @@ class ZigZagLineRenderer {
         let computedDotCount = Int(lineLength / dotSpacing)
         let dotCount = min(maxDots - 1, computedDotCount)
 
-        let zigZagPoints = computeZigZagPoints(from: headsetPos, to: objectPos, count: dotCount)
+        let zigZagPoints = computeZigZagPoints(from: headsetPos, to: objectPos, count: dotCount, amplitude: amplitude, frequency: frequency)
 
         for i in 0..<maxDots {
             let dot = dotEntities[i]

@@ -10,7 +10,8 @@ import SwiftUI
 
 enum step {
     case straight
-    case zigzag
+    case zigzagBeginner
+    case zigzagAdvanced
 }
 
 class DataManager: ObservableObject {
@@ -34,7 +35,11 @@ class DataManager: ObservableObject {
     }
     
     func nextStep() {
-        currentStep = .zigzag
+        if currentStep == .straight {
+            currentStep = .zigzagBeginner
+        } else if currentStep == .zigzagBeginner {
+            currentStep = .zigzagAdvanced
+        }
         stepDidChange.toggle()
     }
 }

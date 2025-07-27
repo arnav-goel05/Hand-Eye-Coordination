@@ -13,7 +13,7 @@ import simd
 import UIKit
 
 @MainActor
-class HeadsetLineRenderer {
+class StraightLineRenderer {
     // MARK: - Configuration
     private let dotRadius: Float = 0.0015
     private let dotSpacing: Float = 0.001 // Reduced spacing for visual density

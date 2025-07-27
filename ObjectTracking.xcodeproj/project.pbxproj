@@ -17,7 +17,7 @@
 		A7C39B072E33D81B006D756B /* ZigZagLineRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C39B062E33D66C006D756B /* ZigZagLineRenderer.swift */; };
 		A7DEC3BA2E202290000FF2CF /* FingerTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7DEC3B92E20228B000FF2CF /* FingerTracker.swift */; };
 		A7DEC3BC2E20229B000FF2CF /* DistanceCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7DEC3BB2E202296000FF2CF /* DistanceCalculator.swift */; };
-		A7DEC3BE2E2022A8000FF2CF /* HeadsetLineRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7DEC3BD2E2022A1000FF2CF /* HeadsetLineRenderer.swift */; };
+		A7DEC3BE2E2022A8000FF2CF /* StraightLineRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7DEC3BD2E2022A1000FF2CF /* StraightLineRenderer.swift */; };
 		E18F5F9A2BBD6C6500D9BFF2 /* ListEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E18F5F992BBD6C6500D9BFF2 /* ListEntryView.swift */; };
 		EB5034152AF137FA0020B48F /* InfoLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB5034142AF137FA0020B48F /* InfoLabel.swift */; };
 		EBA142DF2AD431AD00FB20AD /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBA142DE2AD431AD00FB20AD /* HomeView.swift */; };
@@ -41,7 +41,7 @@
 		A7C39B062E33D66C006D756B /* ZigZagLineRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZigZagLineRenderer.swift; sourceTree = "<group>"; };
 		A7DEC3B92E20228B000FF2CF /* FingerTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FingerTracker.swift; sourceTree = "<group>"; };
 		A7DEC3BB2E202296000FF2CF /* DistanceCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DistanceCalculator.swift; sourceTree = "<group>"; };
-		A7DEC3BD2E2022A1000FF2CF /* HeadsetLineRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeadsetLineRenderer.swift; sourceTree = "<group>"; };
+		A7DEC3BD2E2022A1000FF2CF /* StraightLineRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StraightLineRenderer.swift; sourceTree = "<group>"; };
 		E18F5F992BBD6C6500D9BFF2 /* ListEntryView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ListEntryView.swift; sourceTree = "<group>"; };
 		EB5034142AF137FA0020B48F /* InfoLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoLabel.swift; sourceTree = "<group>"; };
 		EBA142DE2AD431AD00FB20AD /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
@@ -143,7 +143,7 @@
 			isa = PBXGroup;
 			children = (
 				A7C39B062E33D66C006D756B /* ZigZagLineRenderer.swift */,
-				A7DEC3BD2E2022A1000FF2CF /* HeadsetLineRenderer.swift */,
+				A7DEC3BD2E2022A1000FF2CF /* StraightLineRenderer.swift */,
 				A7DEC3BB2E202296000FF2CF /* DistanceCalculator.swift */,
 				A7DEC3B92E20228B000FF2CF /* FingerTracker.swift */,
 				EBE296542AE27E5900F6838C /* AppState.swift */,
@@ -236,7 +236,7 @@
 			files = (
 				EB5034152AF137FA0020B48F /* InfoLabel.swift in Sources */,
 				A7DEC3BA2E202290000FF2CF /* FingerTracker.swift in Sources */,
-				A7DEC3BE2E2022A8000FF2CF /* HeadsetLineRenderer.swift in Sources */,
+				A7DEC3BE2E2022A8000FF2CF /* StraightLineRenderer.swift in Sources */,
 				396786E12B7A5CF8007A056F /* ReferenceObjectLoader.swift in Sources */,
 				A72DB5A22E31D247002CA225 /* Cocoa.referenceobject in Sources */,
 				A7C39B072E33D81B006D756B /* ZigZagLineRenderer.swift in Sources */,

@@ -14,29 +14,26 @@ import simd
 
 @MainActor
 class ObjectAnchorVisualization {
-    // MARK: - Configuration
+    
     private let textHeight: Float = 0.015
     private var distanceObject: Double = 0.0
     private var lastTextUpdateTime: TimeInterval = 0.0
-    
-    // MARK: - Components
+
     private let worldInfo: WorldTrackingProvider
     private let dataManager: DataManager
     let entity: Entity
     
-    private let headsetLineRenderer: HeadsetLineRenderer
-    private let zigZagLineRenderer: ZigZagLineRenderer
+    private let straightLineRenderer: StraightLineRenderer
+    private let zigZagLineRendererBeginner: ZigZagLineRenderer
+    private let zigZagLineRendererAdvanced: ZigZagLineRenderer
     private let fingerTracker: FingerTracker
     private let distanceCalculator: DistanceCalculator
     
-    // MARK: - UI Elements
     private var windowPane: ModelEntity?
     private var instructionText: ModelEntity?
     private let anchorBoundingBox: ObjectAnchor.AxisAlignedBoundingBox
     private var textScale: SIMD3<Float> = [1, 1, 1]
     
-    
-    // MARK: - Initialization
     @MainActor
     init(
         for anchor: ObjectAnchor,
@@ -47,60 +44,70 @@ class ObjectAnchorVisualization {
         self.anchorBoundingBox = anchor.boundingBox
         self.dataManager = dataManager
         
-        // 1) Root entity anchored to the object
         let root = Entity()
         root.transform = Transform(matrix: anchor.originFromAnchorTransform)
         self.entity = root
         
-        // 2) Initialize components
-        self.headsetLineRenderer = HeadsetLineRenderer(parentEntity: root)
-        self.zigZagLineRenderer = ZigZagLineRenderer(parentEntity: root)
+        self.straightLineRenderer = StraightLineRenderer(parentEntity: root)
+        self.zigZagLineRendererBeginner = ZigZagLineRenderer(parentEntity: root)
+        self.zigZagLineRendererAdvanced = ZigZagLineRenderer(parentEntity: root)
         self.fingerTracker = FingerTracker(
             parentEntity: root,
             objectExtents: anchor.boundingBox.extent
         )
         self.distanceCalculator = DistanceCalculator(worldInfo: worldInfo)
         
-        // 3) Create UI:
-        //    a) Larger, rounded “window” pane behind the text
         createWindowPane()
-        //    b) Instruction text on top
         createInstructionText()
     }
     
-    // MARK: - Main Update Loop
     func update(with anchor: ObjectAnchor) {
         guard anchor.isTracked,
               let devicePose = worldInfo.queryDeviceAnchor(atTimestamp: CACurrentMediaTime())
         else {
-            dataManager.currentStep == .straight ? headsetLineRenderer.hideAllDots() : zigZagLineRenderer.hideAllDots()
+            dataManager.currentStep == .straight
+            ? straightLineRenderer.hideAllDots()
+            : dataManager.currentStep == .zigzagBeginner
+            ? zigZagLineRendererBeginner.hideAllDots()
+            : zigZagLineRendererAdvanced.hideAllDots()
             return
         }
         
-        // Update object transform
         entity.transform = Transform(matrix: anchor.originFromAnchorTransform)
         
-        // Update the dotted line from headset to object
         let headsetPos = Transform(matrix: devicePose.originFromAnchorTransform).translation
         let objectPos = entity.transform.translation
         if dataManager.currentStep == .straight {
-                    headsetLineRenderer.updateDottedLine(
+                    straightLineRenderer.updateDottedLine(
                         from: headsetPos,
                         to: objectPos,
                         relativeTo: entity
                     )
-        } else {
-            zigZagLineRenderer.updateZigZagLine(
+        } else if dataManager.currentStep == .zigzagBeginner {
+            zigZagLineRendererBeginner.updateZigZagLine(
                 from: headsetPos,
                 to: objectPos,
-                relativeTo: entity
+                relativeTo: entity,
+                amplitude: 0.05,
+                frequency: 4
+            )
+        } else {
+            zigZagLineRendererAdvanced.updateZigZagLine(
+                from: headsetPos,
+                to: objectPos,
+                relativeTo: entity,
+                amplitude: 0.05,
+                frequency: 8
             )
         }
     }
     
-    // MARK: - Finger Tracking Interface
     func startTracing() {
-        dataManager.currentStep == .straight ? headsetLineRenderer.freezeDots() : zigZagLineRenderer.freezeDots()
+        dataManager.currentStep == .straight
+        ? straightLineRenderer.freezeDots()
+        : dataManager.currentStep == .zigzagBeginner
+        ? zigZagLineRendererBeginner.freezeDots()
+        : zigZagLineRendererAdvanced.freezeDots()
         fingerTracker.startTracing()
         updateInstructionText()
     }
@@ -132,16 +139,19 @@ class ObjectAnchorVisualization {
     }
     
     func showZigZagLine() {
-        zigZagLineRenderer.showAllDots()
+        dataManager.currentStep == .zigzagBeginner
+        ? zigZagLineRendererBeginner.showAllDots()
+        : zigZagLineRendererAdvanced.showAllDots()
     }
 
     func hideZigZagLine() {
-        zigZagLineRenderer.hideAllDots()
+        dataManager.currentStep == .zigzagBeginner
+        ? zigZagLineRendererBeginner.hideAllDots()
+        : zigZagLineRendererAdvanced.hideAllDots()
     }
     
-    // MARK: - Distance Interface
     func updateDistance(_ distance: Float) {
-        print(String(format: "Distance to red line: %.3f m", distance))
+        print(String(format: "Distance to white line: %.3f m", distance))
         let newDistance = Double(distance)
         let now = CACurrentMediaTime()
         if abs(newDistance - distanceObject) > 0.005,
@@ -159,54 +169,45 @@ class ObjectAnchorVisualization {
         )
     }
     
-    /// Call this to remove pooled dots (all line renderers) and clear finger tracing
     func resetVisualizations() {
-        headsetLineRenderer.hideAllDots()
-        zigZagLineRenderer.hideAllDots()
+        straightLineRenderer.hideAllDots()
+        zigZagLineRendererBeginner.hideAllDots()
+        zigZagLineRendererAdvanced.hideAllDots()
         fingerTracker.clearTrace()
         updateInstructionText()
     }
     
-    // MARK: - Window Pane Creation
     private func createWindowPane() {
-        // Increased pane dimensions
         let paneWidth: Float = 0.7
         let paneHeight: Float = 0.08
         let paneDepth: Float = 0
         
-        // Larger corner radius for more pronounced rounding
         let cornerRadius: Float = 0.05
         
-        // Create a box mesh with rounded corners
         let boxMesh = MeshResource.generateBox(
             size: [paneWidth, paneHeight, paneDepth],
             cornerRadius: cornerRadius
         )
         
-        // Semi-transparent white material
         var material = SimpleMaterial()
         material.color = .init(
             tint: UIColor(white: 1.0, alpha: 0.4),
             texture: nil
         )
         
-        // Build the pane entity
         let paneEntity = ModelEntity(mesh: boxMesh, materials: [material])
-        
-        // Position it slightly behind the text
+
         let yOffset = anchorBoundingBox.extent.y + paneHeight / 2 + 0.045
         let zOffset: Float = -0.01
         paneEntity.transform.translation = [0, yOffset, zOffset]
         
-        // Attach to root
         entity.addChild(paneEntity)
         windowPane = paneEntity
     }
     
-    // MARK: - Instruction Text Management
     private func createInstructionText() {
         let textString = String(
-            format: "Trace the dotted red line from your headset to the object.",
+            format: "Trace the white line from your headset to the object.",
             distanceObject
         )
         
@@ -221,14 +222,12 @@ class ObjectAnchorVisualization {
         let material = SimpleMaterial(color: .black, isMetallic: false)
         let textEntity = ModelEntity(mesh: mesh, materials: [material])
         
-        // Scale to desired height
         let bounds = textEntity.visualBounds(relativeTo: nil).extents
         let initialHeight = bounds.y
         let scaleValue = textHeight / initialHeight
         textScale = [scaleValue, scaleValue, scaleValue]
         textEntity.transform.scale = textScale
         
-        // Center over object, above window pane
         let textWidth = bounds.x * scaleValue
         let topOffset = anchorBoundingBox.extent.y + 0.05 + textHeight
         textEntity.transform.translation = [
@@ -249,15 +248,12 @@ class ObjectAnchorVisualization {
         
         let traceLength = fingerTracker.getTraceLength()
         dataManager.setTotalTraceLength(traceLength)
-        let maxAmp = dataManager.maxAmplitude
-        let avgAmp = dataManager.averageAmplitude
         let textString = String(
-            format: "Trace the dotted red line from your headset to the object.\n Distance from your index finger and the ideal path is %.3f m\n Trace length: %.3f m\n",
+            format: "Trace the white line from your headset to the object.\n Distance from your index finger and the ideal path is %.3f m\n Trace length: %.3f m\n",
             distanceObject,
-            traceLength,
+            traceLength
         )
         
-        // Regenerate mesh and re-center
         let newMesh = MeshResource.generateText(
             textString,
             extrusionDepth: 0.001,

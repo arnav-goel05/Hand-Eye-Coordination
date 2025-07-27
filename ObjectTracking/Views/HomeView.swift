@@ -51,6 +51,13 @@ struct HomeView: View {
                                         .fixedSize(horizontal: true, vertical: false)
                                 }
                             
+                            Text("Within this assessment, there are three challenges you must complete in increasing order of difficulty. All the best!!!")
+                                .subtitleTextStyle()
+                                .disabled(!isTitleFinished)
+                                .opacity(isTitleFinished ? 1 : 0)
+                                .animation(.easeIn(duration: 0.4), value: isTitleFinished)
+                                .allowsHitTesting(isTitleFinished)
+                            
                             Button(action: {
                                 Task {
                                     switch await openImmersiveSpace(id: immersiveSpaceIdentifier) {
@@ -80,37 +87,49 @@ struct HomeView: View {
                             isFinished: $isTitleFinished,
                             isAnimated: !isTitleFinished
                         )
+                        .padding(.horizontal, 100)
                     } else {
-                        HStack(spacing: 50) {
-                            Button(action: {
-                                //TODO
-                            }) {
-                                Text("Reset")
-                                    .buttonTextStyle()
-                            }
-                            if dataManager.currentStep == .straight {
+                        VStack(spacing: 50) {
+                            
+                            Text(dataManager.currentStep == .straight 
+                                 ? "Challenge 1: Straight Line"
+                                 : dataManager.currentStep == .zigzagBeginner 
+                                 ? "Challenge 2: Beginner ZigZag Line"
+                                 : "Challenge 3: Advanced ZigZag Line"
+                            )
+                            .subtitleTextStyle()
+                            
+                            HStack(spacing: 50) {
                                 Button(action: {
-                                    Task {
-                                        dataManager.nextStep()
-                                    }
+                                    //TODO
                                 }) {
-                                    Text("Next")
+                                    Text("Reset")
                                         .buttonTextStyle()
                                 }
-                            } else {
-                                Button(action: {
-                                    Task {
-                                        await dismissImmersiveSpace()
-                                        appState.didLeaveImmersiveSpace()
-                                        showSummary = true
+                                if dataManager.currentStep == .straight || dataManager.currentStep == .zigzagBeginner {
+                                    Button(action: {
+                                        Task {
+                                            dataManager.nextStep()
+                                        }
+                                    }) {
+                                        Text("Next")
+                                            .buttonTextStyle()
                                     }
-                                }) {
-                                    Text("Complete")
-                                        .buttonTextStyle()
+                                } else {
+                                    Button(action: {
+                                        Task {
+                                            await dismissImmersiveSpace()
+                                            appState.didLeaveImmersiveSpace()
+                                            showSummary = true
+                                        }
+                                    }) {
+                                        Text("Complete")
+                                            .buttonTextStyle()
+                                    }
                                 }
                             }
                         }
-                        
+                        .padding(.horizontal, 100)
                         if !appState.objectTrackingStartedRunning {
                             HStack {
                                 ProgressView()
