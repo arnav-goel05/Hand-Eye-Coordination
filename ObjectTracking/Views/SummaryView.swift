@@ -5,7 +5,7 @@ struct SummaryView: View {
 
     var body: some View {
         VStack(spacing: 20) {
-            Text("Summary")
+            Text("Summary from both sets of activities")
                 .font(.largeTitle)
             Text("Total finger tracking distance: \(String(format: "%.3f", dataManager.totalTraceLength)) m")
             Text("Maximum amplitude from center line: \(String(format: "%.3f", dataManager.maxAmplitude)) m")

@@ -16,8 +16,8 @@ import UIKit
 class HeadsetLineRenderer {
     // MARK: - Configuration
     private let dotRadius: Float = 0.0015
-    private let dotSpacing: Float = 0.002
-    private let maxDots: Int = Int(5.0 / 0.002) // Maximum line length of 5 meters
+    private let dotSpacing: Float = 0.001 // Reduced spacing for visual density
+    private let maxDots: Int = 1000       // Capped for performance
 
     // MARK: - State
     private var isFrozen: Bool = false         // When true, skip updates
@@ -78,8 +78,9 @@ class HeadsetLineRenderer {
         let lineVector = objectPos - headsetPos
         let lineLength = simd_length(lineVector)
 
-        // Determine how many dots to show
-        let dotCount = min(maxDots - 1, Int(lineLength / dotSpacing))
+        // Determine how many dots to show, safely capped
+        let computedDotCount = Int(lineLength / dotSpacing)
+        let dotCount = min(maxDots - 1, computedDotCount)
 
         for i in 0..<maxDots {
             let dot = dotEntities[i]
@@ -128,7 +129,7 @@ class HeadsetLineRenderer {
 
             let material = shouldUpdateMaterial
                 ? SimpleMaterial(
-                    color: .init(red: 1, green: 1, blue: 1, alpha: CGFloat(newAlpha)),
+                    color: color ?? UIColor(white: 1, alpha: CGFloat(newAlpha)),
                     isMetallic: false
                 )
                 : nil

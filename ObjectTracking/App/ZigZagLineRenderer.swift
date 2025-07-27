@@ -13,10 +13,10 @@ import UIKit
 class ZigZagLineRenderer {
     // MARK: - Configuration
     private let dotRadius: Float = 0.0015
-    private let dotSpacing: Float = 0.002
-    private let maxDots: Int = Int(5.0 / 0.002) // Maximum line length of 5 meters
-    private let zigZagAmplitude: Float = 0.05 // How far the zig-zag shifts left/right
-    private let zigZagFrequency: Int = 4 // Number of zig-zags
+    private let dotSpacing: Float = 0.001 // Reduced spacing for dense line
+    private let maxDots: Int = 1000       // Capped to prevent performance issues
+    private let zigZagAmplitude: Float = 0.05
+    private let zigZagFrequency: Int = 4
 
     // MARK: - State
     private var isFrozen: Bool = false // When true, skip updates
@@ -71,19 +71,23 @@ class ZigZagLineRenderer {
         guard dotCount > 0 else { return [start, end] }
         let direction = normalize(end - start)
         let totalLength = simd_length(end - start)
-        // Choose an arbitrary up vector, avoiding colinearity
+
         let up: SIMD3<Float> = abs(direction.y) < 0.99 ? [0, 1, 0] : [1, 0, 0]
         let right = normalize(cross(direction, up))
+
         var points: [SIMD3<Float>] = []
         for i in 0...dotCount {
             let t = Float(i) / Float(dotCount)
             let point = start + direction * (totalLength * t)
+
             // Zig-zag offset: alternate left/right (sin wave for smoothness)
             let phase = Float(i) * Float(zigZagFrequency) * .pi / Float(dotCount)
             let amplitude = (i == 0 || i == dotCount) ? 0 : zigZagAmplitude * sin(phase)
             let offset = right * amplitude
+
             points.append(point + offset)
         }
+
         return points
     }
 
@@ -100,12 +104,12 @@ class ZigZagLineRenderer {
 
         lineContainer.isEnabled = true
 
-        // Compute vector and total length
         let lineVector = objectPos - headsetPos
         let lineLength = simd_length(lineVector)
 
-        // Determine how many dots to show
-        let dotCount = min(maxDots - 1, Int(lineLength / dotSpacing))
+        // Dynamically compute dot count with hard cap
+        let computedDotCount = Int(lineLength / dotSpacing)
+        let dotCount = min(maxDots - 1, computedDotCount)
 
         let zigZagPoints = computeZigZagPoints(from: headsetPos, to: objectPos, count: dotCount)
 
@@ -153,7 +157,7 @@ class ZigZagLineRenderer {
 
             let material = shouldUpdateMaterial
                 ? SimpleMaterial(
-                    color: .init(red: 1, green: 1, blue: 1, alpha: CGFloat(newAlpha)),
+                    color: color ?? UIColor(white: 1, alpha: CGFloat(newAlpha)),
                     isMetallic: false
                 )
                 : nil
