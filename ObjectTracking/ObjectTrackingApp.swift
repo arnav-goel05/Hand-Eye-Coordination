@@ -37,7 +37,6 @@ struct ObjectTrackingApp: App {
         }
         .environmentObject(dataManager)
 
-        // NEW: 2D Congrats window
         WindowGroup(id: "Summary") {
             SummaryView()
         }

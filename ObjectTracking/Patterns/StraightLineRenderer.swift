@@ -1,8 +1,11 @@
-// ZigZagLineRenderer.swift
+// HeadsetLineRenderer.swift
 // I3D-stroke-rehab
 //
+// See the LICENSE.txt file for this sample's licensing information.
+//
 // Abstract:
-// Renders a zig-zag dotted red line from the headset to the target object, similar in structure to HeadsetLineRenderer.
+// Renders a dotted red line from the headset to the target object.
+// Now supports “freezing” the dots so they no longer update once tracing begins.
 
 import ARKit
 import RealityKit
@@ -10,38 +13,28 @@ import simd
 import UIKit
 
 @MainActor
-class ZigZagLineRenderer {
-    // MARK: - Configuration
+class StraightLineRenderer {
+    
     private let dotRadius: Float = 0.0015
-    private let dotSpacing: Float = 0.001 // Reduced spacing for dense line
-    private let maxDots: Int = 1000       // Capped to prevent performance issues
+    private let dotSpacing: Float = 0.001
+    private let maxDots: Int = 1000
+    private var isFrozen: Bool = false
 
-    // MARK: - State
-    private var isFrozen: Bool = false // When true, skip updates
-
-    // MARK: - Entities
     private let lineContainer: Entity
     private var dotEntities: [ModelEntity] = []
 
     init(parentEntity: Entity) {
-        // Create container for pooled red-dot spheres
         let container = Entity()
-        container.name = "device→object zigzag dots"
+        container.name = "device→object dots"
         parentEntity.addChild(container)
         self.lineContainer = container
 
-        // Pre-pool red-dot spheres for performance
         createDotPool()
     }
-
-    // MARK: - Freeze Control
-
-    /// Once called, subsequent calls to `updateZigZagLine` do nothing.
+    
     func freezeDots() {
         isFrozen = true
     }
-
-    // MARK: - Dot Pool Management
 
     private func createDotPool() {
         let sphereMesh = MeshResource.generateSphere(radius: dotRadius)
@@ -58,71 +51,26 @@ class ZigZagLineRenderer {
         }
     }
 
-    private func computeZigZagPoints(
-        from start: SIMD3<Float>,
-        to end: SIMD3<Float>,
-        count dotCount: Int,
-        amplitude: Float,
-        frequency: Int
-    ) -> [SIMD3<Float>] {
-        guard dotCount > 0 else { return [start, end] }
-        let direction = normalize(end - start)
-        let totalLength = simd_length(end - start)
-
-        let up: SIMD3<Float> = abs(direction.y) < 0.99 ? [0, 1, 0] : [1, 0, 0]
-        let right = normalize(cross(direction, up))
-
-        var points: [SIMD3<Float>] = []
-        for i in 0...dotCount {
-            let t = Float(i) / Float(dotCount)
-            let point = start + direction * (totalLength * t)
-
-            // Zig-zag offset: alternate left/right (sin wave for smoothness)
-            let phase = Float(i) * Float(frequency) * .pi / Float(dotCount)
-            let amp = (i == 0 || i == dotCount) ? 0 : amplitude * sin(phase)
-            let offset = right * amp
-
-            points.append(point + offset)
-        }
-
-        return points
-    }
-
-    // MARK: - Line Rendering
-
-    /// Update the zig-zag dotted-line visualization from headset to object.
-    /// If `freezeDots()` has been called, this will early-exit.
-    /// - Parameters:
-    ///   - headsetPos: Position of the headset.
-    ///   - objectPos: Position of the target object.
-    ///   - entity: Reference entity for position conversion.
-    ///   - amplitude: Amplitude of the zig-zag offset.
-    ///   - frequency: Frequency of the zig-zag oscillations.
-    func updateZigZagLine(
+    func updateDottedLine(
         from headsetPos: SIMD3<Float>,
         to objectPos: SIMD3<Float>,
-        relativeTo entity: Entity,
-        amplitude: Float,
-        frequency: Int
+        relativeTo entity: Entity
     ) {
         guard !isFrozen else { return }
-
         lineContainer.isEnabled = true
-
         let lineVector = objectPos - headsetPos
         let lineLength = simd_length(lineVector)
-
-        // Dynamically compute dot count with hard cap
         let computedDotCount = Int(lineLength / dotSpacing)
         let dotCount = min(maxDots - 1, computedDotCount)
 
-        let zigZagPoints = computeZigZagPoints(from: headsetPos, to: objectPos, count: dotCount, amplitude: amplitude, frequency: frequency)
-
         for i in 0..<maxDots {
             let dot = dotEntities[i]
-            if i < zigZagPoints.count {
-                let worldPosition = zigZagPoints[i]
+
+            if i <= dotCount {
+                let t = Float(i) / Float(max(dotCount, 1))
+                let worldPosition = headsetPos + lineVector * t
                 let localPosition = entity.convert(position: worldPosition, from: nil)
+
                 dot.transform.translation = localPosition
                 dot.isEnabled = true
             } else {
@@ -130,8 +78,6 @@ class ZigZagLineRenderer {
             }
         }
     }
-
-    // MARK: - Visibility
 
     func hideAllDots() {
         dotEntities.forEach { $0.isEnabled = false }
@@ -141,8 +87,6 @@ class ZigZagLineRenderer {
     func showAllDots() {
         lineContainer.isEnabled = true
     }
-
-    // MARK: - Configuration Adjustments
 
     func updateDotAppearance(
         radius: Float? = nil,
@@ -177,8 +121,6 @@ class ZigZagLineRenderer {
             }
         }
     }
-
-    // MARK: - Diagnostics
 
     func getVisibleDotCount() -> Int {
         dotEntities.filter { $0.isEnabled }.count

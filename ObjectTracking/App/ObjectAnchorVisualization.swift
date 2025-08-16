@@ -82,7 +82,6 @@ class ObjectAnchorVisualization {
         let t2: Float = 0.075
         let closerHeadsetPos = simd_mix(headsetPos, objectPos, SIMD3<Float>(repeating: t1))
         let closerObjectPos = simd_mix(objectPos, headsetPos, SIMD3<Float>(repeating: t2))
-        
         if dataManager.currentStep == .straight {
                     straightLineRenderer.updateDottedLine(
                         from: closerHeadsetPos,

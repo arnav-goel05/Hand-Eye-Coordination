@@ -12,13 +12,11 @@
 		396786C62B766C54007A056F /* ObjectAnchorVisualization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 396786C52B766C44007A056F /* ObjectAnchorVisualization.swift */; };
 		396786E12B7A5CF8007A056F /* ReferenceObjectLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 396786E02B7A5CF8007A056F /* ReferenceObjectLoader.swift */; };
 		A72DB5A22E31D247002CA225 /* Cocoa.referenceobject in Sources */ = {isa = PBXBuildFile; fileRef = A72DB5A12E31D247002CA225 /* Cocoa.referenceobject */; };
+		A73A6D692E50DA9A00370A1A /* Soy sauce.referenceobject in Sources */ = {isa = PBXBuildFile; fileRef = A73A6D682E50DA9A00370A1A /* Soy sauce.referenceobject */; };
 		A77B24CA2E36190600C4C891 /* Styles.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77B24C92E36190600C4C891 /* Styles.swift */; };
 		A7827E6D2E241302002C513C /* SummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7827E6C2E2412F3002C513C /* SummaryView.swift */; };
 		A79D9CB22E365812006DD451 /* SummaryImmersiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A79D9CB12E365812006DD451 /* SummaryImmersiveView.swift */; };
-		A7C39B072E33D81B006D756B /* ZigZagLineRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C39B062E33D66C006D756B /* ZigZagLineRenderer.swift */; };
 		A7DEC3BA2E202290000FF2CF /* FingerTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7DEC3B92E20228B000FF2CF /* FingerTracker.swift */; };
-		A7DEC3BC2E20229B000FF2CF /* DistanceCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7DEC3BB2E202296000FF2CF /* DistanceCalculator.swift */; };
-		A7DEC3BE2E2022A8000FF2CF /* StraightLineRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7DEC3BD2E2022A1000FF2CF /* StraightLineRenderer.swift */; };
 		E18F5F9A2BBD6C6500D9BFF2 /* ListEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E18F5F992BBD6C6500D9BFF2 /* ListEntryView.swift */; };
 		EB5034152AF137FA0020B48F /* InfoLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB5034142AF137FA0020B48F /* InfoLabel.swift */; };
 		EBA142DF2AD431AD00FB20AD /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBA142DE2AD431AD00FB20AD /* HomeView.swift */; };
@@ -37,13 +35,11 @@
 		8B0AF4162C3EEDDA0076F08A /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		A6D7F03CD75409349B2BFF2D /* SampleCode.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = SampleCode.xcconfig; path = Configuration/SampleCode.xcconfig; sourceTree = "<group>"; };
 		A72DB5A12E31D247002CA225 /* Cocoa.referenceobject */ = {isa = PBXFileReference; lastKnownFileType = file.referenceobject; path = Cocoa.referenceobject; sourceTree = "<group>"; };
+		A73A6D682E50DA9A00370A1A /* Soy sauce.referenceobject */ = {isa = PBXFileReference; lastKnownFileType = file.referenceobject; path = "Soy sauce.referenceobject"; sourceTree = "<group>"; };
 		A77B24C92E36190600C4C891 /* Styles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Styles.swift; sourceTree = "<group>"; };
 		A7827E6C2E2412F3002C513C /* SummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SummaryView.swift; sourceTree = "<group>"; };
 		A79D9CB12E365812006DD451 /* SummaryImmersiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SummaryImmersiveView.swift; sourceTree = "<group>"; };
-		A7C39B062E33D66C006D756B /* ZigZagLineRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZigZagLineRenderer.swift; sourceTree = "<group>"; };
 		A7DEC3B92E20228B000FF2CF /* FingerTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FingerTracker.swift; sourceTree = "<group>"; };
-		A7DEC3BB2E202296000FF2CF /* DistanceCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DistanceCalculator.swift; sourceTree = "<group>"; };
-		A7DEC3BD2E2022A1000FF2CF /* StraightLineRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StraightLineRenderer.swift; sourceTree = "<group>"; };
 		E18F5F992BBD6C6500D9BFF2 /* ListEntryView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ListEntryView.swift; sourceTree = "<group>"; };
 		EB5034142AF137FA0020B48F /* InfoLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoLabel.swift; sourceTree = "<group>"; };
 		EBA142DE2AD431AD00FB20AD /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
@@ -55,6 +51,8 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		A750C6292E333988009A880C /* ViewModels */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = ViewModels; sourceTree = "<group>"; };
 		A77B24CB2E36191E00C4C891 /* Modifiers */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Modifiers; sourceTree = "<group>"; };
+		A79DD4E82E50AB52001CA2C9 /* Patterns */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Patterns; sourceTree = "<group>"; };
+		A79DD4E92E50B57A001CA2C9 /* Calculations */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Calculations; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -101,6 +99,8 @@
 		394D18C92A960EB9009E3A2E /* ObjectTracking */ = {
 			isa = PBXGroup;
 			children = (
+				A79DD4E92E50B57A001CA2C9 /* Calculations */,
+				A79DD4E82E50AB52001CA2C9 /* Patterns */,
 				A77B24CB2E36191E00C4C891 /* Modifiers */,
 				A750C6292E333988009A880C /* ViewModels */,
 				394D18CE2A960EB9009E3A2E /* ObjectTrackingApp.swift */,
@@ -117,6 +117,7 @@
 			isa = PBXGroup;
 			children = (
 				A72DB5A12E31D247002CA225 /* Cocoa.referenceobject */,
+				A73A6D682E50DA9A00370A1A /* Soy sauce.referenceobject */,
 			);
 			path = "Reference Objects";
 			sourceTree = "<group>";
@@ -145,9 +146,6 @@
 		EBF0DF0E2AEFFDB900ABF63C /* App */ = {
 			isa = PBXGroup;
 			children = (
-				A7C39B062E33D66C006D756B /* ZigZagLineRenderer.swift */,
-				A7DEC3BD2E2022A1000FF2CF /* StraightLineRenderer.swift */,
-				A7DEC3BB2E202296000FF2CF /* DistanceCalculator.swift */,
 				A7DEC3B92E20228B000FF2CF /* FingerTracker.swift */,
 				EBE296542AE27E5900F6838C /* AppState.swift */,
 				396786E02B7A5CF8007A056F /* ReferenceObjectLoader.swift */,
@@ -182,6 +180,8 @@
 			fileSystemSynchronizedGroups = (
 				A750C6292E333988009A880C /* ViewModels */,
 				A77B24CB2E36191E00C4C891 /* Modifiers */,
+				A79DD4E82E50AB52001CA2C9 /* Patterns */,
+				A79DD4E92E50B57A001CA2C9 /* Calculations */,
 			);
 			name = ObjectTracking;
 			productName = ObjectTracking;
@@ -239,16 +239,14 @@
 			files = (
 				EB5034152AF137FA0020B48F /* InfoLabel.swift in Sources */,
 				A7DEC3BA2E202290000FF2CF /* FingerTracker.swift in Sources */,
-				A7DEC3BE2E2022A8000FF2CF /* StraightLineRenderer.swift in Sources */,
 				396786E12B7A5CF8007A056F /* ReferenceObjectLoader.swift in Sources */,
 				A72DB5A22E31D247002CA225 /* Cocoa.referenceobject in Sources */,
-				A7C39B072E33D81B006D756B /* ZigZagLineRenderer.swift in Sources */,
 				EBDA9DAC2AD44D140040C78E /* ObjectTrackingRealityView.swift in Sources */,
 				EBA142DF2AD431AD00FB20AD /* HomeView.swift in Sources */,
 				A7827E6D2E241302002C513C /* SummaryView.swift in Sources */,
+				A73A6D692E50DA9A00370A1A /* Soy sauce.referenceobject in Sources */,
 				394D18CF2A960EB9009E3A2E /* ObjectTrackingApp.swift in Sources */,
 				A79D9CB22E365812006DD451 /* SummaryImmersiveView.swift in Sources */,
-				A7DEC3BC2E20229B000FF2CF /* DistanceCalculator.swift in Sources */,
 				A77B24CA2E36190600C4C891 /* Styles.swift in Sources */,
 				396786C62B766C54007A056F /* ObjectAnchorVisualization.swift in Sources */,
 				393E4AB02A9629A7005C9691 /* Entity+ObjectTracking.swift in Sources */,
