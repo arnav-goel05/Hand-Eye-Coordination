@@ -95,9 +95,9 @@ struct SummaryView: View {
 
     private func userTrace(for type: SummaryType) -> [SIMD3<Float>] {
         switch type {
-        case .straight: return dataManager.straightUserTrace
-        case .zigzagBeginner: return dataManager.zigzagBeginnerUserTrace
-        case .zigzagAdvanced: return dataManager.zigzagAdvancedUserTrace
+        case .straight: return dataManager.straightUserTrace.map { $0.0 }
+        case .zigzagBeginner: return dataManager.zigzagBeginnerUserTrace.map { $0.0 }
+        case .zigzagAdvanced: return dataManager.zigzagAdvancedUserTrace.map { $0.0 }
         }
     }
 
@@ -126,7 +126,7 @@ struct SummaryView: View {
         guard !trace.isEmpty else { return }
         var csvString = "X,Y,Z\n"
         for point in trace {
-            csvString += "\(point.x),\(point.y),\(point.z)\n"
+            csvString += "\(point.0.x),\(point.0.y),\(point.0.z)\n"
         }
         do {
             let tempDir = FileManager.default.temporaryDirectory
@@ -164,7 +164,7 @@ struct SummaryView: View {
         guard !trace.isEmpty else { return }
         var csvString = "X,Y,Z\n"
         for point in trace {
-            csvString += "\(point.x),\(point.y),\(point.z)\n"
+            csvString += "\(point.0.x),\(point.0.y),\(point.0.z)\n"
         }
         do {
             let tempDir = FileManager.default.temporaryDirectory
@@ -202,7 +202,7 @@ struct SummaryView: View {
         guard !trace.isEmpty else { return }
         var csvString = "X,Y,Z\n"
         for point in trace {
-            csvString += "\(point.x),\(point.y),\(point.z)\n"
+            csvString += "\(point.0.x),\(point.0.y),\(point.0.z)\n"
         }
         do {
             let tempDir = FileManager.default.temporaryDirectory
@@ -231,11 +231,7 @@ struct SummaryView: View {
         
         let straightTrace = dataManager.straightUserTrace
         if !straightTrace.isEmpty {
-            combinedCSV += "Straight User Trace\nX,Y,Z\n"
-            for point in straightTrace {
-                combinedCSV += "\(point.x),\(point.y),\(point.z)\n"
-            }
-            combinedCSV += "\n"
+            combinedCSV += "Straight User Trace\n" + dataManager.exportUserTraceCSV(for: .straight) + "\n"
         }
         
         if let startZigzagBeginner = headsetPos(for: .zigzagBeginner), let endZigzagBeginner = objectPos(for: .zigzagBeginner) {
@@ -253,11 +249,7 @@ struct SummaryView: View {
         
         let zigzagBeginnerTrace = dataManager.zigzagBeginnerUserTrace
         if !zigzagBeginnerTrace.isEmpty {
-            combinedCSV += "Zigzag Beginner User Trace\nX,Y,Z\n"
-            for point in zigzagBeginnerTrace {
-                combinedCSV += "\(point.x),\(point.y),\(point.z)\n"
-            }
-            combinedCSV += "\n"
+            combinedCSV += "Zigzag Beginner User Trace\n" + dataManager.exportUserTraceCSV(for: .zigzagBeginner) + "\n"
         }
         
         if let startZigzagAdvanced = headsetPos(for: .zigzagAdvanced), let endZigzagAdvanced = objectPos(for: .zigzagAdvanced) {
@@ -275,11 +267,7 @@ struct SummaryView: View {
         
         let zigzagAdvancedTrace = dataManager.zigzagAdvancedUserTrace
         if !zigzagAdvancedTrace.isEmpty {
-            combinedCSV += "Zigzag Advanced User Trace\nX,Y,Z\n"
-            for point in zigzagAdvancedTrace {
-                combinedCSV += "\(point.x),\(point.y),\(point.z)\n"
-            }
-            combinedCSV += "\n"
+            combinedCSV += "Zigzag Advanced User Trace\n" + dataManager.exportUserTraceCSV(for: .zigzagAdvanced) + "\n"
         }
         
         guard !combinedCSV.isEmpty else { return }

@@ -7,6 +7,7 @@ import ARKit
 import RealityKit
 import SwiftUI
 import simd
+import Foundation
 
 @MainActor
 class FingerTracker {
@@ -18,7 +19,11 @@ class FingerTracker {
     private let halfExtents: SIMD3<Float>      // Half the size of the object’s bounding box
 
     private(set) var isTracing: Bool = false
-    private var traceSegments: [[SIMD3<Float>]] = []
+    private var traceStartTime: TimeInterval?  // Start time of the current trace
+    private var cumulativeElapsedTime: TimeInterval = 0  // Cumulative elapsed time carried over between traces
+
+    // Each segment is an array of tuples (position, elapsed time since start)
+    private var traceSegments: [[(SIMD3<Float>, TimeInterval)]] = []
     private var traceLineEntities: [ModelEntity] = []
 
     private let traceContainer: Entity
@@ -30,19 +35,35 @@ class FingerTracker {
         container.name = "finger trace line"
         parentEntity.addChild(container)
         self.traceContainer = container
+
+        // Observe for .stepDidChange notifications to reset timer and traces as needed
+        NotificationCenter.default.addObserver(self, selector: #selector(handleStepDidChange), name: .stepDidChange, object: nil)
+    }
+
+    @objc private func handleStepDidChange() {
+        // Reset trace timer and cumulative elapsed time to zero when step changes in the session
+        cumulativeElapsedTime = 0
+        traceStartTime = nil
+        // Optional: clear existing trace segments to reset the tracing session
+        clearTrace()
+        print("Step changed - reset trace timer and cleared traces.")
     }
 
     func startTracing() {
         guard !isTracing else { return }
         isTracing = true
+        // Start time is current media time minus cumulative elapsed time to continue timer
+        traceStartTime = CACurrentMediaTime() - cumulativeElapsedTime
         traceSegments.append([])
         traceLineEntities.append(ModelEntity()) // Placeholder; will be replaced when drawing
         print("Started finger tracing")
     }
 
     func stopTracing() {
-        guard isTracing else { return }
+        guard isTracing, let startTime = traceStartTime else { return }
         isTracing = false
+        // Update cumulative elapsed time but do not reset traceStartTime or cumulativeElapsedTime here
+        cumulativeElapsedTime = CACurrentMediaTime() - startTime
         print("Stopped finger tracing.")
     }
 
@@ -50,28 +71,34 @@ class FingerTracker {
         for entity in traceLineEntities { entity.removeFromParent() }
         traceSegments.removeAll()
         traceLineEntities.removeAll()
+        traceStartTime = nil
+        cumulativeElapsedTime = 0
         print("Cleared all finger traces")
     }
 
     func updateFingerTrace(fingerWorldPos: SIMD3<Float>, relativeTo entity: Entity) {
-        guard isTracing, !traceSegments.isEmpty else { return }
+        guard isTracing, !traceSegments.isEmpty, let startTime = traceStartTime else { return }
         var currentSegment = traceSegments.removeLast()
-        if let last = currentSegment.last {
+        if let last = currentSegment.last?.0 {
             let d = simd_length(fingerWorldPos - last)
             if d < minTraceDistance {
                 traceSegments.append(currentSegment)
                 return
             }
         }
-        currentSegment.append(fingerWorldPos)
+        // Calculate elapsed time since start of tracing
+        let elapsed = CACurrentMediaTime() - startTime
+        currentSegment.append((fingerWorldPos, elapsed))
         traceSegments.append(currentSegment)
         updateTraceVisualization(relativeTo: entity)
     }
 
     private func updateTraceVisualization(relativeTo entity: Entity) {
         guard let segmentIndex = traceSegments.indices.last else { return }
-        let pts = traceSegments[segmentIndex]
-        guard pts.count >= 2 else { return }
+        let ptsWithTime = traceSegments[segmentIndex]
+        guard ptsWithTime.count >= 2 else { return }
+        // Extract positions only for visualization
+        let pts = ptsWithTime.map { $0.0 }
         let localPts = pts.map { entity.convert(position: $0, from: nil) }
         let mesh = createTubeMesh(from: localPts, radius: lineWidth/2, radialSegments: 16)
         let yellowMaterial = UnlitMaterial(color: UIColor(red: 1, green: 1, blue: 0, alpha: 1))
@@ -130,14 +157,37 @@ class FingerTracker {
         return try! MeshResource.generate(from: [desc])
     }
 
+    /// Returns just the positions of all points from all segments (ignores timing).
     func getTracePoints() -> [SIMD3<Float>] {
+        return traceSegments.flatMap { segment in
+            segment.map { $0.0 }
+        }
+    }
+
+    /// Returns all points with their associated elapsed time since tracing started.
+    func getTimedTracePoints() -> [(SIMD3<Float>, TimeInterval)] {
         return traceSegments.flatMap { $0 }
     }
 
     func getTraceLength() -> Float {
         return traceSegments.reduce(0) { sum, segment in
             guard segment.count > 1 else { return sum }
-            return sum + zip(segment, segment.dropFirst()).reduce(0) { $0 + simd_length($1.1 - $1.0) }
+            let positions = segment.map { $0.0 }
+            return sum + zip(positions, positions.dropFirst()).reduce(0) { $0 + simd_length($1.1 - $1.0) }
         }
     }
+
+    /// Exports trace data as CSV string: each line "x,y,z,time"
+    func exportTraceDataAsCSV() -> String {
+        var csvLines: [String] = []
+        for segment in traceSegments {
+            for (pos, time) in segment {
+                let line = "\(pos.x),\(pos.y),\(pos.z),\(time)"
+                csvLines.append(line)
+            }
+        }
+        return csvLines.joined(separator: "\n")
+    }
+    
+    // Timer is only reset on step/session change, not on tracing stop/start.
 }

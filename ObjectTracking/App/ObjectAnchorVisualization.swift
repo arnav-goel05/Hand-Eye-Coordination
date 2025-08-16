@@ -121,7 +121,8 @@ class ObjectAnchorVisualization {
     func stopTracing() {
         fingerTracker.stopTracing()
         let stepType = dataManager.currentStep
-        let userTrace = fingerTracker.getTracePoints()
+        // userTrace now stores tuples of (position, timestamp)
+        let userTrace: [(SIMD3<Float>, TimeInterval)] = fingerTracker.getTimedTracePoints()
         let headsetPos = Transform(matrix: worldInfo.queryDeviceAnchor(atTimestamp: CACurrentMediaTime())?.originFromAnchorTransform ?? matrix_identity_float4x4).translation
         let objectPos = entity.transform.translation
         
@@ -158,12 +159,21 @@ class ObjectAnchorVisualization {
         )
     }
     
+    /// Returns the trace points as an array of positions, ignoring timestamps.
     func getTracePoints() -> [SIMD3<Float>] {
-        fingerTracker.getTracePoints()
+        let traceWithTime = fingerTracker.getTimedTracePoints()
+        return traceWithTime.map { $0.0 }
     }
     
+    /// Returns the total length of the trace, calculated from positions only.
     func getTraceLength() -> Float {
-        fingerTracker.getTraceLength()
+        let positions = getTracePoints()
+        guard positions.count > 1 else { return 0 }
+        var length: Float = 0
+        for i in 1..<positions.count {
+            length += simd_distance(positions[i], positions[i-1])
+        }
+        return length
     }
     
     func showZigZagLine() {
@@ -283,7 +293,7 @@ class ObjectAnchorVisualization {
         
         guard let textEntity = instructionText else { return }
         
-        let traceLength = fingerTracker.getTraceLength()
+        let traceLength = getTraceLength()
         dataManager.setTotalTraceLength(traceLength)
         let textString = String(
             format: "Trace the white line from your headset to the object.\n Distance from your index finger and the ideal path is %.3f m\n Trace length: %.3f m\n",
@@ -316,7 +326,7 @@ class ObjectAnchorVisualization {
     private func computeAmplitudes() -> [Float] {
         guard
             let devicePose = worldInfo.queryDeviceAnchor(atTimestamp: CACurrentMediaTime()),
-            !fingerTracker.getTracePoints().isEmpty
+            !fingerTracker.getTimedTracePoints().isEmpty
         else {
             return []
         }
@@ -336,7 +346,9 @@ class ObjectAnchorVisualization {
         
         let normLine = lineVec / lineLen
         
-        return fingerTracker.getTracePoints().map { pt in
+        // Map using only positions, ignore timestamps
+        return fingerTracker.getTimedTracePoints().map { ptWithTime in
+            let pt = ptWithTime.0
             let vecToPt        = pt - closerHeadsetPos
             let projLen        = simd_dot(vecToPt, normLine)
             let closestOnLine  = closerHeadsetPos + normLine * projLen
@@ -358,3 +370,4 @@ class ObjectAnchorVisualization {
         dataManager.setAverageAmplitude(avgAmp)
     }
 }
+

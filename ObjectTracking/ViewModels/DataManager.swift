@@ -8,6 +8,10 @@
 
 import SwiftUI
 
+extension Notification.Name {
+    static let stepDidChange = Notification.Name("stepDidChange")
+}
+
 enum step {
     case straight
     case zigzagBeginner
@@ -29,9 +33,10 @@ class DataManager: ObservableObject {
     @Published var currentStep: step = .straight
     @Published var stepDidChange: Bool = false
 
-    @Published var straightUserTrace: [SIMD3<Float>] = []
-    @Published var zigzagBeginnerUserTrace: [SIMD3<Float>] = []
-    @Published var zigzagAdvancedUserTrace: [SIMD3<Float>] = []
+    // Changed from [SIMD3<Float>] to [(SIMD3<Float>, TimeInterval)] to store positions along with their timestamps
+    @Published var straightUserTrace: [(SIMD3<Float>, TimeInterval)] = []
+    @Published var zigzagBeginnerUserTrace: [(SIMD3<Float>, TimeInterval)] = []
+    @Published var zigzagAdvancedUserTrace: [(SIMD3<Float>, TimeInterval)] = []
     
     func setTotalTraceLength(_ length: Float) {
         self.totalTraceLength = length
@@ -45,6 +50,11 @@ class DataManager: ObservableObject {
         self.averageAmplitude = amplitude
     }
     
+    /// Notifies listeners to reset their tracing timer when step changes.
+    private func notifyStepDidChange() {
+        NotificationCenter.default.post(name: .stepDidChange, object: nil)
+    }
+    
     func nextStep() {
         if currentStep == .straight {
             currentStep = .zigzagBeginner
@@ -52,9 +62,11 @@ class DataManager: ObservableObject {
             currentStep = .zigzagAdvanced
         }
         stepDidChange.toggle()
+        notifyStepDidChange()
     }
 
-    func setUserTrace(_ trace: [SIMD3<Float>], for step: step) {
+    // Updated to accept and set trace with timestamp data
+    func setUserTrace(_ trace: [(SIMD3<Float>, TimeInterval)], for step: step) {
         switch step {
         case .straight: straightUserTrace = trace
         case .zigzagBeginner: zigzagBeginnerUserTrace = trace
@@ -62,12 +74,31 @@ class DataManager: ObservableObject {
         }
     }
 
-    func getUserTrace(for step: step) -> [SIMD3<Float>] {
+    // Updated to return trace with timestamp data
+    func getUserTrace(for step: step) -> [(SIMD3<Float>, TimeInterval)] {
         switch step {
         case .straight: return straightUserTrace
         case .zigzagBeginner: return zigzagBeginnerUserTrace
         case .zigzagAdvanced: return zigzagAdvancedUserTrace
         }
     }
+    
+    // Helper method to get just the positions without timestamps for legacy uses
+    func getUserTracePositions(for step: step) -> [SIMD3<Float>] {
+        return getUserTrace(for: step).map { $0.0 }
+    }
+    
+    // Export the user trace for the given step as a CSV string
+    // CSV columns: time,x,y,z
+    func exportUserTraceCSV(for step: step) -> String {
+        let trace = getUserTrace(for: step)
+        // Header line
+        var csvString = "time,x,y,z\n"
+        for (position, time) in trace {
+            // Format floats and time with fixed decimals for CSV clarity
+            let line = String(format: "%.3f,%.6f,%.6f,%.6f\n", time, position.x, position.y, position.z)
+            csvString.append(line)
+        }
+        return csvString
+    }
 }
-

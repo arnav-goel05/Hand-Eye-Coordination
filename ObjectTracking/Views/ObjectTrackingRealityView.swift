@@ -246,6 +246,7 @@ struct ObjectTrackingRealityView: View {
                 startTracing()
             }
             for viz in objectVisualizations.values {
+                // Pass only the SIMD3<Float> position as required
                 viz.updateFingerTrace(fingerWorldPos: indexTipPosition)
             }
             lastMovementTime = currentTime
