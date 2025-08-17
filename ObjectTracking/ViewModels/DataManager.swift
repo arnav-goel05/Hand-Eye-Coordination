@@ -8,10 +8,6 @@
 
 import SwiftUI
 
-extension Notification.Name {
-    static let stepDidChange = Notification.Name("stepDidChange")
-}
-
 enum step {
     case straight
     case zigzagBeginner
@@ -50,11 +46,6 @@ class DataManager: ObservableObject {
         self.averageAmplitude = amplitude
     }
     
-    /// Notifies listeners to reset their tracing timer when step changes.
-    private func notifyStepDidChange() {
-        NotificationCenter.default.post(name: .stepDidChange, object: nil)
-    }
-    
     func nextStep() {
         if currentStep == .straight {
             currentStep = .zigzagBeginner
@@ -62,7 +53,6 @@ class DataManager: ObservableObject {
             currentStep = .zigzagAdvanced
         }
         stepDidChange.toggle()
-        notifyStepDidChange()
     }
 
     // Updated to accept and set trace with timestamp data

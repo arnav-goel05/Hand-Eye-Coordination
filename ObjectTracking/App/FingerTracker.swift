@@ -7,7 +7,6 @@ import ARKit
 import RealityKit
 import SwiftUI
 import simd
-import Foundation
 
 @MainActor
 class FingerTracker {
@@ -20,7 +19,6 @@ class FingerTracker {
 
     private(set) var isTracing: Bool = false
     private var traceStartTime: TimeInterval?  // Start time of the current trace
-    private var cumulativeElapsedTime: TimeInterval = 0  // Cumulative elapsed time carried over between traces
 
     // Each segment is an array of tuples (position, elapsed time since start)
     private var traceSegments: [[(SIMD3<Float>, TimeInterval)]] = []
@@ -35,35 +33,20 @@ class FingerTracker {
         container.name = "finger trace line"
         parentEntity.addChild(container)
         self.traceContainer = container
-
-        // Observe for .stepDidChange notifications to reset timer and traces as needed
-        NotificationCenter.default.addObserver(self, selector: #selector(handleStepDidChange), name: .stepDidChange, object: nil)
-    }
-
-    @objc private func handleStepDidChange() {
-        // Reset trace timer and cumulative elapsed time to zero when step changes in the session
-        cumulativeElapsedTime = 0
-        traceStartTime = nil
-        // Optional: clear existing trace segments to reset the tracing session
-        clearTrace()
-        print("Step changed - reset trace timer and cleared traces.")
     }
 
     func startTracing() {
         guard !isTracing else { return }
         isTracing = true
-        // Start time is current media time minus cumulative elapsed time to continue timer
-        traceStartTime = CACurrentMediaTime() - cumulativeElapsedTime
+        traceStartTime = CACurrentMediaTime()  // Record start time of tracing
         traceSegments.append([])
         traceLineEntities.append(ModelEntity()) // Placeholder; will be replaced when drawing
         print("Started finger tracing")
     }
 
     func stopTracing() {
-        guard isTracing, let startTime = traceStartTime else { return }
+        guard isTracing else { return }
         isTracing = false
-        // Update cumulative elapsed time but do not reset traceStartTime or cumulativeElapsedTime here
-        cumulativeElapsedTime = CACurrentMediaTime() - startTime
         print("Stopped finger tracing.")
     }
 
@@ -72,7 +55,6 @@ class FingerTracker {
         traceSegments.removeAll()
         traceLineEntities.removeAll()
         traceStartTime = nil
-        cumulativeElapsedTime = 0
         print("Cleared all finger traces")
     }
 
@@ -188,6 +170,4 @@ class FingerTracker {
         }
         return csvLines.joined(separator: "\n")
     }
-    
-    // Timer is only reset on step/session change, not on tracing stop/start.
 }
