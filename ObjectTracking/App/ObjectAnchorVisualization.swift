@@ -159,6 +159,36 @@ class ObjectAnchorVisualization {
         )
     }
     
+    /// For the straight step, checks if the given finger world position is near the first dot of the straight line (within a certain threshold).
+    func isFingerNearFirstDot(_ fingerWorldPos: SIMD3<Float>, threshold: Float = 0.02) -> Bool {
+        let firstDotWorldPos: SIMD3<Float>?
+        switch dataManager.currentStep {
+        case .straight:
+            firstDotWorldPos = straightLineRenderer.getFirstDotWorldPosition(relativeTo: entity)
+        case .zigzagBeginner:
+            firstDotWorldPos = zigZagLineRendererBeginner.getFirstDotWorldPosition(relativeTo: entity)
+        case .zigzagAdvanced:
+            firstDotWorldPos = zigZagLineRendererAdvanced.getFirstDotWorldPosition(relativeTo: entity)
+        }
+        guard let firstDot = firstDotWorldPos else { return false }
+        return simd_distance(fingerWorldPos, firstDot) < threshold
+    }
+    
+    /// For the straight step, checks if the given finger world position is near the last dot of the straight line (within a certain threshold).
+    func isFingerNearLastDot(_ fingerWorldPos: SIMD3<Float>, threshold: Float = 0.02) -> Bool {
+        let lastDotWorldPos: SIMD3<Float>?
+        switch dataManager.currentStep {
+        case .straight:
+            lastDotWorldPos = straightLineRenderer.getLastDotWorldPosition(relativeTo: entity)
+        case .zigzagBeginner:
+            lastDotWorldPos = zigZagLineRendererBeginner.getLastDotWorldPosition(relativeTo: entity)
+        case .zigzagAdvanced:
+            lastDotWorldPos = zigZagLineRendererAdvanced.getLastDotWorldPosition(relativeTo: entity)
+        }
+        guard let lastDot = lastDotWorldPos else { return false }
+        return simd_distance(fingerWorldPos, lastDot) < threshold
+    }
+    
     /// Returns the trace points as an array of positions, ignoring timestamps.
     func getTracePoints() -> [SIMD3<Float>] {
         let traceWithTime = fingerTracker.getTimedTracePoints()

@@ -42,9 +42,16 @@ struct ObjectTrackingRealityView: View {
     
     // Configuration
     private let stationaryThreshold: Float = 0.01 // 1cm
-    private let fingerTouchThreshold: Float = 0.02 // 2cm
+    private let fingerTouchThreshold: Float = 0.01 
     
     @State private var updateTask: Task<Void, Never>? = nil
+
+    // Added state to track if straight step tracing is armed but not yet started
+    // This stays true until the step changes, so the initial first-dot pinch is only required once per step.
+    @State private var traceArmed: Bool = false
+    
+    // New state to lock tracing after last dot touched until step changes
+    @State private var isTracingLocked: Bool = false
 
     var body: some View {
         GeometryReader { geometry in
@@ -116,7 +123,7 @@ struct ObjectTrackingRealityView: View {
             
             updateTask = Task {
                 while !Task.isCancelled {
-                    let offset = SIMD3<Float>(0, -0.1, -0.75)
+                    let offset = SIMD3<Float>(0, -0.05, -0.75)
                     let deviceAnchor = worldInfo.queryDeviceAnchor(atTimestamp: CACurrentMediaTime())
                     let virtualPoint: SIMD3<Float>
                     if let deviceAnchor = deviceAnchor {
@@ -148,10 +155,12 @@ struct ObjectTrackingRealityView: View {
             
             appState.didLeaveImmersiveSpace()
         }
-        .onChange(of: dataManager.stepDidChange) { _, _ in
+        .onChange(of: dataManager.stepDidChange) { newStep in
             for viz in objectVisualizations.values {
                 viz.resetVisualizations()
             }
+            traceArmed = false
+            isTracingLocked = false
         }
     }
     
@@ -237,20 +246,49 @@ struct ObjectTrackingRealityView: View {
     private func handleFingerTracing(indexTipPosition: SIMD3<Float>, thumbTipPosition: SIMD3<Float>) async {
         let currentTime = CACurrentMediaTime()
         let distance = simd_length(indexTipPosition - thumbTipPosition)
-        if distance < fingerTouchThreshold {
-            if !isTracing {
-                startTracing()
+            // For the "straight" step:
+            // Require the initial pinch at the first dot once per step to arm tracing.
+            // Once armed, tracing can start/stop from anywhere by pinching, as in other steps.
+            if !traceArmed {
+                // Check if user pinches at first dot to arm
+                if distance < fingerTouchThreshold && !isTracingLocked {
+                    for viz in objectVisualizations.values {
+                        if viz.isFingerNearFirstDot(indexTipPosition) {
+                            traceArmed = true
+                            startTracing()
+                            break
+                        }
+                    }
+                } else {
+                    // Not pinching, do nothing until pinched at first dot once
+                    if isTracing {
+                        stopTracing()
+                    }
+                }
+            } else {
+                // Once armed, tracing can be started/stopped anywhere by pinching, just like other steps
+                if distance < fingerTouchThreshold && !isTracingLocked {
+                    if !isTracing {
+                        startTracing()
+                    }
+                    for viz in objectVisualizations.values {
+                        viz.updateFingerTrace(fingerWorldPos: indexTipPosition)
+                        if viz.isFingerNearLastDot(indexTipPosition) {
+                            if isTracing {
+                                stopTracing()
+                                isTracingLocked = true
+                            }
+                            break
+                        }
+                    }
+                    lastMovementTime = currentTime
+                } else {
+                    if isTracing {
+                        stopTracing()
+                    }
+                }
             }
-            for viz in objectVisualizations.values {
-                // Pass only the SIMD3<Float> position as required
-                viz.updateFingerTrace(fingerWorldPos: indexTipPosition)
-            }
-            lastMovementTime = currentTime
-        } else {
-            if isTracing {
-                stopTracing()
-            }
-        }
+        
         lastFingerPosition = indexTipPosition
     }
     
@@ -294,3 +332,4 @@ struct ObjectTrackingRealityView: View {
         return SIMD3<Float>(world.x, world.y, world.z)
     }
 }
+

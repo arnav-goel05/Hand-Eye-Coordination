@@ -197,4 +197,19 @@ class ZigZagLineRenderer {
     func getMaxLineLength() -> Float {
         Float(maxDots) * dotSpacing
     }
+    
+    /// Returns the world position of the first dot (index 0) if it is enabled.
+    func getFirstDotWorldPosition(relativeTo entity: Entity) -> SIMD3<Float>? {
+        guard let dot = dotEntities.first, dot.isEnabled else { return nil }
+        // Convert the dot's local position to world position
+        let localPos = dot.transform.translation
+        return entity.convert(position: localPos, to: nil)
+    }
+    
+    /// Returns the world position of the last enabled dot in the dotEntities array.
+    func getLastDotWorldPosition(relativeTo entity: Entity) -> SIMD3<Float>? {
+        guard let dot = dotEntities.last(where: { $0.isEnabled }) else { return nil }
+        let localPos = dot.transform.translation
+        return entity.convert(position: localPos, to: nil)
+    }
 }
