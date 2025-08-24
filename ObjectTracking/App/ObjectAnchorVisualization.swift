@@ -60,7 +60,7 @@ class ObjectAnchorVisualization {
         self.distanceCalculator = DistanceCalculator(worldInfo: worldInfo)
         
         createWindowPane()
-        createInstructionText()
+       // createInstructionText()
     }
     
     func update(virtualPoint newVirtualPoint: SIMD3<Float>) {
@@ -115,7 +115,7 @@ class ObjectAnchorVisualization {
         ? zigZagLineRendererBeginner.freezeDots()
         : zigZagLineRendererAdvanced.freezeDots()
         fingerTracker.startTracing()
-        updateInstructionText()
+       // updateInstructionText()
     }
     
     func stopTracing() {
@@ -125,8 +125,7 @@ class ObjectAnchorVisualization {
         let userTrace: [(SIMD3<Float>, TimeInterval)] = fingerTracker.getTimedTracePoints()
         let headsetPos = Transform(matrix: worldInfo.queryDeviceAnchor(atTimestamp: CACurrentMediaTime())?.originFromAnchorTransform ?? matrix_identity_float4x4).translation
         let objectPos = virtualPoint
-        
-        // Interpolate positions to move them closer as in update(with:)
+
         let t1: Float = 0.325
         let t2: Float = 0
         let closerHeadsetPos = simd_mix(headsetPos, objectPos, SIMD3<Float>(repeating: t1))
@@ -144,12 +143,12 @@ class ObjectAnchorVisualization {
             dataManager.zigzagAdvancedObjectPosition = closerObjectPos
         }
         dataManager.setUserTrace(userTrace, for: stepType)
-        updateInstructionText()
+       // updateInstructionText()
     }
     
     func clearTrace() {
         fingerTracker.clearTrace()
-        updateInstructionText()
+       // updateInstructionText()
     }
     
     func updateFingerTrace(fingerWorldPos: SIMD3<Float>) {
@@ -159,7 +158,6 @@ class ObjectAnchorVisualization {
         )
     }
     
-    /// For the straight step, checks if the given finger world position is near the first dot of the straight line (within a certain threshold).
     func isFingerNearFirstDot(_ fingerWorldPos: SIMD3<Float>, threshold: Float = 0.02) -> Bool {
         let firstDotWorldPos: SIMD3<Float>?
         switch dataManager.currentStep {
@@ -174,7 +172,6 @@ class ObjectAnchorVisualization {
         return simd_distance(fingerWorldPos, firstDot) < threshold
     }
     
-    /// For the straight step, checks if the given finger world position is near the last dot of the straight line (within a certain threshold).
     func isFingerNearLastDot(_ fingerWorldPos: SIMD3<Float>, threshold: Float = 0.02) -> Bool {
         let lastDotWorldPos: SIMD3<Float>?
         switch dataManager.currentStep {
@@ -189,13 +186,11 @@ class ObjectAnchorVisualization {
         return simd_distance(fingerWorldPos, lastDot) < threshold
     }
     
-    /// Returns the trace points as an array of positions, ignoring timestamps.
     func getTracePoints() -> [SIMD3<Float>] {
         let traceWithTime = fingerTracker.getTimedTracePoints()
         return traceWithTime.map { $0.0 }
     }
     
-    /// Returns the total length of the trace, calculated from positions only.
     func getTraceLength() -> Float {
         let positions = getTracePoints()
         guard positions.count > 1 else { return 0 }
@@ -226,12 +221,11 @@ class ObjectAnchorVisualization {
            now - lastTextUpdateTime >= 0.1 {
             distanceObject = newDistance
             lastTextUpdateTime = now
-            updateInstructionText()
+          //  updateInstructionText()
         }
     }
     
     func distanceFromFinger(to fingerWorldPos: SIMD3<Float>) -> Float? {
-        // Instead of using original positions, interpolate headsetPos and virtualPoint like in update(virtualPoint:)
         let headsetPos = Transform(matrix: worldInfo.queryDeviceAnchor(atTimestamp: CACurrentMediaTime())?.originFromAnchorTransform ?? matrix_identity_float4x4).translation
         let objectPos = virtualPoint
         
@@ -251,7 +245,7 @@ class ObjectAnchorVisualization {
         zigZagLineRendererBeginner.hideAllDots()
         zigZagLineRendererAdvanced.hideAllDots()
         fingerTracker.clearTrace()
-        updateInstructionText()
+       // updateInstructionText()
     }
     
     private func createWindowPane() {
@@ -282,73 +276,73 @@ class ObjectAnchorVisualization {
         windowPane = paneEntity
     }
     
-    private func createInstructionText() {
-        let textString = "Trace the white line from your headset to the object."
-        
-        let mesh = MeshResource.generateText(
-            textString,
-            extrusionDepth: 0.001,
-            font: .systemFont(ofSize: 0.1),
-            containerFrame: .zero,
-            alignment: .center,
-            lineBreakMode: .byWordWrapping
-        )
-        let material = SimpleMaterial(color: .black, isMetallic: false)
-        let textEntity = ModelEntity(mesh: mesh, materials: [material])
-        
-        let bounds = textEntity.visualBounds(relativeTo: nil).extents
-        let initialHeight = bounds.y
-        let scaleValue = textHeight / initialHeight
-        textScale = [scaleValue, scaleValue, scaleValue]
-        textEntity.transform.scale = textScale
-        
-        let textWidth = bounds.x * scaleValue
-        let topOffset = virtualPoint.y + 0.05 + textHeight
-        textEntity.transform.translation = [
-            -0.25,
-             topOffset,
-             0
-        ]
-        
-        entity.addChild(textEntity)
-        instructionText = textEntity
-    }
-    
-    private func updateInstructionText() {
-        computeMaxAmplitude()
-        computeAverageAmplitude()
-        
-        guard let textEntity = instructionText else { return }
-        
-        let traceLength = getTraceLength()
-        dataManager.setTotalTraceLength(traceLength)
-        let textString = String(
-            format: "Trace the white line from your headset to the object.\n Distance from your index finger and the ideal path is %.3f m\n Trace length: %.3f m\n",
-            distanceObject,
-            traceLength
-        )
-        
-        let newMesh = MeshResource.generateText(
-            textString,
-            extrusionDepth: 0.001,
-            font: .systemFont(ofSize: 0.1),
-            containerFrame: .zero,
-            alignment: .center,
-            lineBreakMode: .byWordWrapping
-        )
-        textEntity.model?.mesh = newMesh
-        
-        let bounds = textEntity.visualBounds(relativeTo: nil).extents
-        let textWidth = bounds.x
-        let topOffset = virtualPoint.y + 0.05 + textHeight
-        
-        textEntity.transform.translation = [
-            -0.25,
-             topOffset,
-             0
-        ]
-        textEntity.transform.scale = textScale
-    }
+//    private func createInstructionText() {
+//        let textString = "Trace the white line from your headset to the object."
+//        
+//        let mesh = MeshResource.generateText(
+//            textString,
+//            extrusionDepth: 0.001,
+//            font: .systemFont(ofSize: 0.1),
+//            containerFrame: .zero,
+//            alignment: .center,
+//            lineBreakMode: .byWordWrapping
+//        )
+//        let material = SimpleMaterial(color: .black, isMetallic: false)
+//        let textEntity = ModelEntity(mesh: mesh, materials: [material])
+//        
+//        let bounds = textEntity.visualBounds(relativeTo: nil).extents
+//        let initialHeight = bounds.y
+//        let scaleValue = textHeight / initialHeight
+//        textScale = [scaleValue, scaleValue, scaleValue]
+//        textEntity.transform.scale = textScale
+//        
+//        let textWidth = bounds.x * scaleValue
+//        let topOffset = virtualPoint.y + 0.05 + textHeight
+//        textEntity.transform.translation = [
+//            -0.25,
+//             topOffset,
+//             0
+//        ]
+//        
+//        entity.addChild(textEntity)
+//        instructionText = textEntity
+//    }
+//    
+//    private func updateInstructionText() {
+//        computeMaxAmplitude()
+//        computeAverageAmplitude()
+//        
+//        guard let textEntity = instructionText else { return }
+//        
+//        let traceLength = getTraceLength()
+//        dataManager.setTotalTraceLength(traceLength)
+//        let textString = String(
+//            format: "Trace the white line from your headset to the object.\n Distance from your index finger and the ideal path is %.3f m\n Trace length: %.3f m\n",
+//            distanceObject,
+//            traceLength
+//        )
+//        
+//        let newMesh = MeshResource.generateText(
+//            textString,
+//            extrusionDepth: 0.001,
+//            font: .systemFont(ofSize: 0.1),
+//            containerFrame: .zero,
+//            alignment: .center,
+//            lineBreakMode: .byWordWrapping
+//        )
+//        textEntity.model?.mesh = newMesh
+//        
+//        let bounds = textEntity.visualBounds(relativeTo: nil).extents
+//        let textWidth = bounds.x
+//        let topOffset = virtualPoint.y + 0.05 + textHeight
+//        
+//        textEntity.transform.translation = [
+//            -0.25,
+//             topOffset,
+//             0
+//        ]
+//        textEntity.transform.scale = textScale
+//    }
     
     private func computeAmplitudes() -> [Float] {
         guard

@@ -100,38 +100,24 @@ class ZigZagLineRenderer {
                 let localPosition = entity.convert(position: worldPosition, from: nil)
                 dot.transform.translation = localPosition
                 dot.isEnabled = true
-                if i == 0 || i == zigZagPoints.count - 1 {
-                    let blackMaterial = SimpleMaterial(color: .black, isMetallic: false)
+                if i == 0 {
+                    let greenMaterial = SimpleMaterial(color: .green, isMetallic: false)
                     if let mesh = dot.model?.mesh, mesh.bounds.extents.x != 0.003 * 2 {
                         dot.model?.mesh = MeshResource.generateSphere(radius: 0.003)
                     }
-                    if let mat = dot.model?.materials.first as? SimpleMaterial {
-                        if let matColor = mat.color as? UIColor {
-                            if matColor != UIColor.black {
-                                dot.model?.materials = [blackMaterial]
-                            }
-                        } else {
-                            dot.model?.materials = [blackMaterial]
-                        }
-                    } else {
-                        dot.model?.materials = [blackMaterial]
+                    dot.model?.materials = [greenMaterial]
+                } else if i == zigZagPoints.count - 1 {
+                    let redMaterial = SimpleMaterial(color: .red, isMetallic: false)
+                    if let mesh = dot.model?.mesh, mesh.bounds.extents.x != 0.003 * 2 {
+                        dot.model?.mesh = MeshResource.generateSphere(radius: 0.003)
                     }
+                    dot.model?.materials = [redMaterial]
                 } else {
                     let whiteMaterial = SimpleMaterial(color: .white, isMetallic: false)
                     if let mesh = dot.model?.mesh, mesh.bounds.extents.x != dotRadius * 2 {
                         dot.model?.mesh = MeshResource.generateSphere(radius: dotRadius)
                     }
-                    if let mat = dot.model?.materials.first as? SimpleMaterial {
-                        if let matColor = mat.color as? UIColor {
-                            if matColor != UIColor.white {
-                                dot.model?.materials = [whiteMaterial]
-                            }
-                        } else {
-                            dot.model?.materials = [whiteMaterial]
-                        }
-                    } else {
-                        dot.model?.materials = [whiteMaterial]
-                    }
+                    dot.model?.materials = [whiteMaterial]
                 }
             } else {
                 dot.isEnabled = false
@@ -198,7 +184,6 @@ class ZigZagLineRenderer {
         Float(maxDots) * dotSpacing
     }
     
-    /// Returns the world position of the first dot (index 0) if it is enabled.
     func getFirstDotWorldPosition(relativeTo entity: Entity) -> SIMD3<Float>? {
         guard let dot = dotEntities.first, dot.isEnabled else { return nil }
         // Convert the dot's local position to world position
@@ -206,7 +191,6 @@ class ZigZagLineRenderer {
         return entity.convert(position: localPos, to: nil)
     }
     
-    /// Returns the world position of the last enabled dot in the dotEntities array.
     func getLastDotWorldPosition(relativeTo entity: Entity) -> SIMD3<Float>? {
         guard let dot = dotEntities.last(where: { $0.isEnabled }) else { return nil }
         let localPos = dot.transform.translation

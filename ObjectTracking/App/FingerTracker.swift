@@ -11,16 +11,15 @@ import simd
 @MainActor
 class FingerTracker {
 
-    private let lineWidth: Float = 0.005       // Width of the continuous line
-    private let minTraceDistance: Float = 0    // Min distance to add a new point
-    private let touchMargin: Float = 0.02      // 2 cm margin around box
+    private let lineWidth: Float = 0.005
+    private let minTraceDistance: Float = 0
+    private let touchMargin: Float = 0.02
 
-    private let halfExtents: SIMD3<Float>      // Half the size of the object’s bounding box
+    private let halfExtents: SIMD3<Float>
 
     private(set) var isTracing: Bool = false
-    private var traceStartTime: TimeInterval?  // Start time of the current trace
+    private var traceStartTime: TimeInterval?
 
-    // Each segment is an array of tuples (position, elapsed time since start)
     private var traceSegments: [[(SIMD3<Float>, TimeInterval)]] = []
     private var traceLineEntities: [ModelEntity] = []
 
@@ -38,9 +37,9 @@ class FingerTracker {
     func startTracing() {
         guard !isTracing else { return }
         isTracing = true
-        traceStartTime = CACurrentMediaTime()  // Record start time of tracing
+        traceStartTime = CACurrentMediaTime()
         traceSegments.append([])
-        traceLineEntities.append(ModelEntity()) // Placeholder; will be replaced when drawing
+        traceLineEntities.append(ModelEntity())
         print("Started finger tracing")
     }
 
@@ -68,7 +67,7 @@ class FingerTracker {
                 return
             }
         }
-        // Calculate elapsed time since start of tracing
+
         let elapsed = CACurrentMediaTime() - startTime
         currentSegment.append((fingerWorldPos, elapsed))
         traceSegments.append(currentSegment)
@@ -79,12 +78,12 @@ class FingerTracker {
         guard let segmentIndex = traceSegments.indices.last else { return }
         let ptsWithTime = traceSegments[segmentIndex]
         guard ptsWithTime.count >= 2 else { return }
-        // Extract positions only for visualization
+
         let pts = ptsWithTime.map { $0.0 }
         let localPts = pts.map { entity.convert(position: $0, from: nil) }
         let mesh = createTubeMesh(from: localPts, radius: lineWidth/2, radialSegments: 16)
         let yellowMaterial = UnlitMaterial(color: UIColor(red: 1, green: 1, blue: 0, alpha: 1))
-        // Remove old entity if exists
+
         if traceLineEntities[segmentIndex].parent != nil {
             traceLineEntities[segmentIndex].removeFromParent()
         }
@@ -139,14 +138,12 @@ class FingerTracker {
         return try! MeshResource.generate(from: [desc])
     }
 
-    /// Returns just the positions of all points from all segments (ignores timing).
     func getTracePoints() -> [SIMD3<Float>] {
         return traceSegments.flatMap { segment in
             segment.map { $0.0 }
         }
     }
 
-    /// Returns all points with their associated elapsed time since tracing started.
     func getTimedTracePoints() -> [(SIMD3<Float>, TimeInterval)] {
         return traceSegments.flatMap { $0 }
     }
@@ -159,7 +156,6 @@ class FingerTracker {
         }
     }
 
-    /// Exports trace data as CSV string: each line "x,y,z,time"
     func exportTraceDataAsCSV() -> String {
         var csvLines: [String] = []
         for segment in traceSegments {

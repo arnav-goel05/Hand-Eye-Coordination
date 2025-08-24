@@ -286,21 +286,18 @@ struct SummaryView: View {
     private func exportAllData() {
         var rows: [String] = ["task,path_type,point_idx,timestamp,x,y,z"]
 
-        // For guide dots (no timestamp)
         func appendGuide(task: String, points: [SIMD3<Float>]) {
             for (i, p) in points.enumerated() {
                 rows.append("\(task),guide,\(i),,\(p.x),\(p.y),\(p.z)")
             }
         }
 
-        // For user traces (with timestamp)
         func appendUser(task: String, trace: [(time: TimeInterval, pos: SIMD3<Float>)]) {
             for (i, entry) in trace.enumerated() {
                 rows.append("\(task),user,\(i),\(entry.time),\(entry.pos.x),\(entry.pos.y),\(entry.pos.z)")
             }
         }
 
-        // Straight
         if let start = headsetPos(for: .straight),
            let end = objectPos(for: .straight) {
             appendGuide(task: "straight",
@@ -308,7 +305,6 @@ struct SummaryView: View {
         }
         appendUser(task: "straight", trace: dataManager.straightUserTrace.map { (pos, time) in (time: time, pos: pos) })
 
-        // Zigzag beginner
         if let start = headsetPos(for: .zigzagBeginner),
            let end = objectPos(for: .zigzagBeginner) {
             appendGuide(task: "zigzag_beginner",
@@ -316,7 +312,6 @@ struct SummaryView: View {
         }
         appendUser(task: "zigzag_beginner", trace: dataManager.zigzagBeginnerUserTrace.map { (pos, time) in (time: time, pos: pos) })
 
-        // Zigzag advanced
         if let start = headsetPos(for: .zigzagAdvanced),
            let end = objectPos(for: .zigzagAdvanced) {
             appendGuide(task: "zigzag_advanced",
@@ -324,7 +319,6 @@ struct SummaryView: View {
         }
         appendUser(task: "zigzag_advanced", trace: dataManager.zigzagAdvancedUserTrace.map { (pos, time) in (time: time, pos: pos) })
 
-        // Write to CSV
         let csv = rows.joined(separator: "\n")
         guard rows.count > 1 else { return }
 
@@ -335,7 +329,6 @@ struct SummaryView: View {
             csvURL = fileURL
             isExportingCSV = true
         } catch {
-            // Handle error if needed
         }
     }
 

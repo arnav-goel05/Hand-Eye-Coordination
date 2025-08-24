@@ -74,8 +74,7 @@ struct SummaryImmersiveView: View {
                     let objectDot = ModelEntity(mesh: sphereMesh, materials: [SimpleMaterial(color: .white, isMetallic: false)])
                     objectDot.position = .zero
                     root.addChild(objectDot)
-                    
-                    // Draw guidance dots based on lineType
+
                     switch lineType {
                     case .straight:
                         let guideDots = generateStraightLineGuideDots(start: shiftedObjectPos, end: headsetPos)
@@ -85,9 +84,8 @@ struct SummaryImmersiveView: View {
                             dot.position = pt - center
                             root.addChild(dot)
                         }
-                        // Draw user finger trace path (if available)
+
                         if !userTrace.isEmpty {
-                            // Center the trace points around their average
                             let traceCenter = userTrace.reduce(.zero, +) / Float(userTrace.count)
                             for pt in userTrace {
                                 let traceDot = ModelEntity(mesh: sphereMesh, materials: [SimpleMaterial(color: .yellow, isMetallic: false)])
@@ -96,7 +94,7 @@ struct SummaryImmersiveView: View {
                             }
                         }
                     case .zigzagBeginner:
-                        let amplitude: Float = 0.05 // beginner
+                        let amplitude: Float = 0.05
                         let frequency = 4
                         let guideDots = generateZigZagGuideDots(start: shiftedObjectPos, end: headsetPos, amplitude: amplitude, frequency: frequency)
                         let center = guideDots.reduce(.zero, +) / Float(guideDots.count)
@@ -105,9 +103,8 @@ struct SummaryImmersiveView: View {
                             dot.position = pt - center
                             root.addChild(dot)
                         }
-                        // Draw user finger trace path (if available)
+
                         if !userTrace.isEmpty {
-                            // Center the trace points around their average
                             let traceCenter = userTrace.reduce(.zero, +) / Float(userTrace.count)
                             for pt in userTrace {
                                 let traceDot = ModelEntity(mesh: sphereMesh, materials: [SimpleMaterial(color: .yellow, isMetallic: false)])
@@ -116,7 +113,7 @@ struct SummaryImmersiveView: View {
                             }
                         }
                     case .zigzagAdvanced:
-                        let amplitude: Float = 0.05 // advanced
+                        let amplitude: Float = 0.05
                         let frequency = 8
                         let guideDots = generateZigZagGuideDots(start: shiftedObjectPos, end: headsetPos, amplitude: amplitude, frequency: frequency)
                         let center = guideDots.reduce(.zero, +) / Float(guideDots.count)
@@ -125,9 +122,7 @@ struct SummaryImmersiveView: View {
                             dot.position = pt - center
                             root.addChild(dot)
                         }
-                        // Draw user finger trace path (if available)
                         if !userTrace.isEmpty {
-                            // Center the trace points around their average
                             let traceCenter = userTrace.reduce(.zero, +) / Float(userTrace.count)
                             for pt in userTrace {
                                 let traceDot = ModelEntity(mesh: sphereMesh, materials: [SimpleMaterial(color: .yellow, isMetallic: false)])
