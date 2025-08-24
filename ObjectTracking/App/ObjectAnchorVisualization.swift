@@ -78,8 +78,8 @@ class ObjectAnchorVisualization {
         let headsetPos = Transform(matrix: devicePose.originFromAnchorTransform).translation
         let objectPos = entity.transform.translation
         // Move headsetPos and objectPos closer to each other by t
-        let t1: Float = 0.25 // t=0.0 (original positions), t=1.0 (swapped)
-        let t2: Float = 0.075
+        let t1: Float = 0.325
+        let t2: Float = 0.15
         let closerHeadsetPos = simd_mix(headsetPos, objectPos, SIMD3<Float>(repeating: t1))
         let closerObjectPos = simd_mix(objectPos, headsetPos, SIMD3<Float>(repeating: t2))
         if dataManager.currentStep == .straight {
@@ -127,8 +127,8 @@ class ObjectAnchorVisualization {
         let objectPos = entity.transform.translation
         
         // Interpolate positions to move them closer as in update(with:)
-        let t1: Float = 0.25
-        let t2: Float = 0.075
+        let t1: Float = 0.325
+        let t2: Float = 0.15
         let closerHeadsetPos = simd_mix(headsetPos, objectPos, SIMD3<Float>(repeating: t1))
         let closerObjectPos = simd_mix(objectPos, headsetPos, SIMD3<Float>(repeating: t2))
         
@@ -205,8 +205,8 @@ class ObjectAnchorVisualization {
         let headsetPos = Transform(matrix: worldInfo.queryDeviceAnchor(atTimestamp: CACurrentMediaTime())?.originFromAnchorTransform ?? matrix_identity_float4x4).translation
         let objectPos = entity.transform.translation
         
-        let t1: Float = 0.25
-        let t2: Float = 0.075
+        let t1: Float = 0.325
+        let t2: Float = 0.15
         let closerHeadsetPos = simd_mix(headsetPos, objectPos, SIMD3<Float>(repeating: t1))
         let closerObjectPos = simd_mix(objectPos, headsetPos, SIMD3<Float>(repeating: t2))
         
@@ -335,8 +335,8 @@ class ObjectAnchorVisualization {
         let objectPos  = entity.transform.translation
         
         // Interpolate positions to move them closer as in update(with:)
-        let t1: Float = 0.25
-        let t2: Float = 0.075
+        let t1: Float = 0.325
+        let t2: Float = 0.15
         let closerHeadsetPos = simd_mix(headsetPos, objectPos, SIMD3<Float>(repeating: t1))
         let closerObjectPos = simd_mix(objectPos, headsetPos, SIMD3<Float>(repeating: t2))
         
