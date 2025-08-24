@@ -100,6 +100,39 @@ class ZigZagLineRenderer {
                 let localPosition = entity.convert(position: worldPosition, from: nil)
                 dot.transform.translation = localPosition
                 dot.isEnabled = true
+                if i == 0 || i == zigZagPoints.count - 1 {
+                    let blackMaterial = SimpleMaterial(color: .black, isMetallic: false)
+                    if let mesh = dot.model?.mesh, mesh.bounds.extents.x != 0.003 * 2 {
+                        dot.model?.mesh = MeshResource.generateSphere(radius: 0.003)
+                    }
+                    if let mat = dot.model?.materials.first as? SimpleMaterial {
+                        if let matColor = mat.color as? UIColor {
+                            if matColor != UIColor.black {
+                                dot.model?.materials = [blackMaterial]
+                            }
+                        } else {
+                            dot.model?.materials = [blackMaterial]
+                        }
+                    } else {
+                        dot.model?.materials = [blackMaterial]
+                    }
+                } else {
+                    let whiteMaterial = SimpleMaterial(color: .white, isMetallic: false)
+                    if let mesh = dot.model?.mesh, mesh.bounds.extents.x != dotRadius * 2 {
+                        dot.model?.mesh = MeshResource.generateSphere(radius: dotRadius)
+                    }
+                    if let mat = dot.model?.materials.first as? SimpleMaterial {
+                        if let matColor = mat.color as? UIColor {
+                            if matColor != UIColor.white {
+                                dot.model?.materials = [whiteMaterial]
+                            }
+                        } else {
+                            dot.model?.materials = [whiteMaterial]
+                        }
+                    } else {
+                        dot.model?.materials = [whiteMaterial]
+                    }
+                }
             } else {
                 dot.isEnabled = false
             }

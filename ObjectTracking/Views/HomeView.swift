@@ -79,7 +79,6 @@ struct HomeView: View {
                             .opacity(isTitleFinished ? 1 : 0)
                             .animation(.easeIn(duration: 0.4), value: isTitleFinished)
                             .allowsHitTesting(isTitleFinished)
-                            .disabled(!appState.canEnterImmersiveSpace || appState.referenceObjectLoader.enabledReferenceObjectsCount == 0)
                         }
                         .typeText(
                             text: $titleText,
@@ -100,12 +99,12 @@ struct HomeView: View {
                             .subtitleTextStyle()
                             
                             HStack(spacing: 50) {
-                                Button(action: {
-                                    //TODO
-                                }) {
-                                    Text("Reset")
-                                        .buttonTextStyle()
-                                }
+//                                Button(action: {
+//                                    //TODO
+//                                }) {
+//                                    Text("Reset")
+//                                        .buttonTextStyle()
+//                                }
                                 if dataManager.currentStep == .straight || dataManager.currentStep == .zigzagBeginner {
                                     Button(action: {
                                         Task {
@@ -130,12 +129,6 @@ struct HomeView: View {
                             }
                         }
                         .padding(.horizontal, 100)
-                        if !appState.objectTrackingStartedRunning {
-                            HStack {
-                                ProgressView()
-                                Text("Please wait until all reference objects have been loaded")
-                            }
-                        }
                     }
                 } else {
                     InfoLabel(appState: appState)

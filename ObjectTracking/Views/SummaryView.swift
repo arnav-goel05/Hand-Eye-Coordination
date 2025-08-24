@@ -42,10 +42,10 @@ struct SummaryView: View {
                 .titleTextStyle()
             Text("Total finger tracking distance: \(String(format: "%.3f", dataManager.totalTraceLength)) m")
                 .subtitleTextStyle()
-            Text("Maximum amplitude from center line: \(String(format: "%.3f", dataManager.maxAmplitude)) m")
-                .subtitleTextStyle()
-            Text("Average amplitude from center line: \(String(format: "%.3f", dataManager.averageAmplitude)) m")
-                .subtitleTextStyle()
+//            Text("Maximum amplitude from center line: \(String(format: "%.3f", dataManager.maxAmplitude)) m")
+//                .subtitleTextStyle()
+//            Text("Average amplitude from center line: \(String(format: "%.3f", dataManager.averageAmplitude)) m")
+//                .subtitleTextStyle()
             
             if let start = headsetPos(for: .straight), let end = objectPos(for: .straight) {
                 Button("Export All Data") {
@@ -55,43 +55,43 @@ struct SummaryView: View {
             }
         }
 
-        HStack(spacing: 15) {
-            Button("Straight Path") {
-                selectedSummary = .straight
-            }
-            .buttonTextStyle()
-            Button("Zigzag Beginner Path") {
-                selectedSummary = .zigzagBeginner
-            }
-            .buttonTextStyle()
-            Button("Zigzag Advanced Path") {
-                selectedSummary = .zigzagAdvanced
-            }
-            .buttonTextStyle()
-        }
-        .fullScreenCover(item: $selectedSummary) { which in
-            SummaryImmersiveView(
-                userTrace: userTrace(for: which),
-                headsetPos: headsetPos(for: which),
-                objectPos: objectPos(for: which),
-                lineType: {
-                    switch which {
-                    case .straight: return .straight
-                    case .zigzagBeginner: return .zigzagBeginner
-                    case .zigzagAdvanced: return .zigzagAdvanced
-                    }
-                }()
-            )
-        }
-        .fileExporter(
-            isPresented: $isExportingCSV,
-            document: csvURL.map { URLDocument(fileURL: $0) },
-            contentType: .commaSeparatedText,
-            defaultFilename: "StraightGuideDots"
-        ) { result in
-            csvURL = nil
-        }
-    }
+//        HStack(spacing: 15) {
+//            Button("Straight Path") {
+//                selectedSummary = .straight
+//            }
+//            .buttonTextStyle()
+//            Button("Zigzag Beginner Path") {
+//                selectedSummary = .zigzagBeginner
+//            }
+//            .buttonTextStyle()
+//            Button("Zigzag Advanced Path") {
+//                selectedSummary = .zigzagAdvanced
+//            }
+//            .buttonTextStyle()
+//        }
+//        .fullScreenCover(item: $selectedSummary) { which in
+//            SummaryImmersiveView(
+//                userTrace: userTrace(for: which),
+//                headsetPos: headsetPos(for: which),
+//                objectPos: objectPos(for: which),
+//                lineType: {
+//                    switch which {
+//                    case .straight: return .straight
+//                    case .zigzagBeginner: return .zigzagBeginner
+//                    case .zigzagAdvanced: return .zigzagAdvanced
+//                    }
+//                }()
+//            )
+//        }
+//        .fileExporter(
+//            isPresented: $isExportingCSV,
+//            document: csvURL.map { URLDocument(fileURL: $0) },
+//            contentType: .commaSeparatedText,
+//            defaultFilename: "StraightGuideDots"
+//        ) { result in
+//            csvURL = nil
+//        }
+       }
 
     private func userTrace(for type: SummaryType) -> [SIMD3<Float>] {
         switch type {

@@ -5,7 +5,8 @@
 //
 // Abstract:
 // Main visualization coordinator for object anchors with instruction text,
-// a larger, more rounded “window” pane behind it, and component management.
+// a larger, more rounded “window” pane behind it, and component management,
+// refactored to use a virtual point instead of an object anchor.
 
 import ARKit
 import RealityKit
@@ -31,21 +32,22 @@ class ObjectAnchorVisualization {
     
     private var windowPane: ModelEntity?
     private var instructionText: ModelEntity?
-    private let anchorBoundingBox: ObjectAnchor.AxisAlignedBoundingBox
     private var textScale: SIMD3<Float> = [1, 1, 1]
+    
+    var virtualPoint: SIMD3<Float>
     
     @MainActor
     init(
-        for anchor: ObjectAnchor,
         using worldInfo: WorldTrackingProvider,
-        dataManager: DataManager
+        dataManager: DataManager,
+        virtualPoint: SIMD3<Float>
     ) {
         self.worldInfo = worldInfo
-        self.anchorBoundingBox = anchor.boundingBox
         self.dataManager = dataManager
+        self.virtualPoint = [virtualPoint.x, virtualPoint.y, virtualPoint.z]
         
         let root = Entity()
-        root.transform = Transform(matrix: anchor.originFromAnchorTransform)
+        root.transform = Transform() // Identity transform at origin
         self.entity = root
         
         self.straightLineRenderer = StraightLineRenderer(parentEntity: root)
@@ -53,7 +55,7 @@ class ObjectAnchorVisualization {
         self.zigZagLineRendererAdvanced = ZigZagLineRenderer(parentEntity: root)
         self.fingerTracker = FingerTracker(
             parentEntity: root,
-            objectExtents: anchor.boundingBox.extent
+            objectExtents: [0.1, 0.1, 0.1] // Provide a default small extent
         )
         self.distanceCalculator = DistanceCalculator(worldInfo: worldInfo)
         
@@ -61,10 +63,10 @@ class ObjectAnchorVisualization {
         createInstructionText()
     }
     
-    func update(with anchor: ObjectAnchor) {
-        guard anchor.isTracked,
-              let devicePose = worldInfo.queryDeviceAnchor(atTimestamp: CACurrentMediaTime())
-        else {
+    func update(virtualPoint newVirtualPoint: SIMD3<Float>) {
+        virtualPoint = newVirtualPoint
+        
+        guard let devicePose = worldInfo.queryDeviceAnchor(atTimestamp: CACurrentMediaTime()) else {
             dataManager.currentStep == .straight
             ? straightLineRenderer.hideAllDots()
             : dataManager.currentStep == .zigzagBeginner
@@ -73,21 +75,20 @@ class ObjectAnchorVisualization {
             return
         }
         
-        entity.transform = Transform(matrix: anchor.originFromAnchorTransform)
-        
         let headsetPos = Transform(matrix: devicePose.originFromAnchorTransform).translation
-        let objectPos = entity.transform.translation
+        let objectPos = virtualPoint
         // Move headsetPos and objectPos closer to each other by t
         let t1: Float = 0.325
-        let t2: Float = 0.15
+        let t2: Float = 0
         let closerHeadsetPos = simd_mix(headsetPos, objectPos, SIMD3<Float>(repeating: t1))
         let closerObjectPos = simd_mix(objectPos, headsetPos, SIMD3<Float>(repeating: t2))
+        
         if dataManager.currentStep == .straight {
-                    straightLineRenderer.updateDottedLine(
-                        from: closerHeadsetPos,
-                        to: closerObjectPos,
-                        relativeTo: entity
-                    )
+            straightLineRenderer.updateDottedLine(
+                from: closerHeadsetPos,
+                to: closerObjectPos,
+                relativeTo: entity
+            )
         } else if dataManager.currentStep == .zigzagBeginner {
             zigZagLineRendererBeginner.updateZigZagLine(
                 from: closerHeadsetPos,
@@ -117,18 +118,17 @@ class ObjectAnchorVisualization {
         updateInstructionText()
     }
     
-    
     func stopTracing() {
         fingerTracker.stopTracing()
         let stepType = dataManager.currentStep
         // userTrace now stores tuples of (position, timestamp)
         let userTrace: [(SIMD3<Float>, TimeInterval)] = fingerTracker.getTimedTracePoints()
         let headsetPos = Transform(matrix: worldInfo.queryDeviceAnchor(atTimestamp: CACurrentMediaTime())?.originFromAnchorTransform ?? matrix_identity_float4x4).translation
-        let objectPos = entity.transform.translation
+        let objectPos = virtualPoint
         
         // Interpolate positions to move them closer as in update(with:)
         let t1: Float = 0.325
-        let t2: Float = 0.15
+        let t2: Float = 0
         let closerHeadsetPos = simd_mix(headsetPos, objectPos, SIMD3<Float>(repeating: t1))
         let closerObjectPos = simd_mix(objectPos, headsetPos, SIMD3<Float>(repeating: t2))
         
@@ -201,12 +201,12 @@ class ObjectAnchorVisualization {
     }
     
     func distanceFromFinger(to fingerWorldPos: SIMD3<Float>) -> Float? {
-        // Instead of using original positions, interpolate headsetPos and objectPos like in update(with:)
+        // Instead of using original positions, interpolate headsetPos and virtualPoint like in update(virtualPoint:)
         let headsetPos = Transform(matrix: worldInfo.queryDeviceAnchor(atTimestamp: CACurrentMediaTime())?.originFromAnchorTransform ?? matrix_identity_float4x4).translation
-        let objectPos = entity.transform.translation
+        let objectPos = virtualPoint
         
         let t1: Float = 0.325
-        let t2: Float = 0.15
+        let t2: Float = 0
         let closerHeadsetPos = simd_mix(headsetPos, objectPos, SIMD3<Float>(repeating: t1))
         let closerObjectPos = simd_mix(objectPos, headsetPos, SIMD3<Float>(repeating: t2))
         
@@ -244,7 +244,7 @@ class ObjectAnchorVisualization {
         
         let paneEntity = ModelEntity(mesh: boxMesh, materials: [material])
 
-        let yOffset = anchorBoundingBox.extent.y + paneHeight / 2 + 0.045
+        let yOffset = virtualPoint.y + paneHeight / 2 + 0.045
         let zOffset: Float = -0.01
         paneEntity.transform.translation = [0, yOffset, zOffset]
         
@@ -253,10 +253,7 @@ class ObjectAnchorVisualization {
     }
     
     private func createInstructionText() {
-        let textString = String(
-            format: "Trace the white line from your headset to the object.",
-            distanceObject
-        )
+        let textString = "Trace the white line from your headset to the object."
         
         let mesh = MeshResource.generateText(
             textString,
@@ -276,7 +273,7 @@ class ObjectAnchorVisualization {
         textEntity.transform.scale = textScale
         
         let textWidth = bounds.x * scaleValue
-        let topOffset = anchorBoundingBox.extent.y + 0.05 + textHeight
+        let topOffset = virtualPoint.y + 0.05 + textHeight
         textEntity.transform.translation = [
             -0.25,
              topOffset,
@@ -313,7 +310,7 @@ class ObjectAnchorVisualization {
         
         let bounds = textEntity.visualBounds(relativeTo: nil).extents
         let textWidth = bounds.x
-        let topOffset = anchorBoundingBox.extent.y + 0.05 + textHeight
+        let topOffset = virtualPoint.y + 0.05 + textHeight
         
         textEntity.transform.translation = [
             -0.25,
@@ -332,11 +329,11 @@ class ObjectAnchorVisualization {
         }
         
         let headsetPos = Transform(matrix: devicePose.originFromAnchorTransform).translation
-        let objectPos  = entity.transform.translation
+        let objectPos  = virtualPoint
         
-        // Interpolate positions to move them closer as in update(with:)
+        // Interpolate positions to move them closer as in update(virtualPoint:)
         let t1: Float = 0.325
-        let t2: Float = 0.15
+        let t2: Float = 0
         let closerHeadsetPos = simd_mix(headsetPos, objectPos, SIMD3<Float>(repeating: t1))
         let closerObjectPos = simd_mix(objectPos, headsetPos, SIMD3<Float>(repeating: t2))
         

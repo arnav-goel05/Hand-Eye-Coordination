@@ -23,11 +23,6 @@ struct ObjectTrackingApp: App {
                 appState: appState,
                 immersiveSpaceIdentifier: UIIdentifier.immersiveSpace
             )
-            .task {
-                if appState.allRequiredProvidersAreSupported {
-                    await appState.referenceObjectLoader.loadBuiltInReferenceObjects()
-                }
-            }
         }
         .windowStyle(.plain)
         .environmentObject(dataManager)

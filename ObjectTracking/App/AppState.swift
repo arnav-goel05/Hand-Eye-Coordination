@@ -12,8 +12,6 @@ import ARKit
 class AppState {
     var isImmersiveSpaceOpened = false
     
-    let referenceObjectLoader = ReferenceObjectLoader()
-    
     func didLeaveImmersiveSpace() {
         // Stop the provider; the provider that just ran in the
         // immersive space is now in a paused state and isn't needed
@@ -34,25 +32,6 @@ class AppState {
     var providersStoppedWithError = false
     
     var worldSensingAuthorizationStatus = ARKitSession.AuthorizationStatus.notDetermined
-    
-    func startTracking() async -> ObjectTrackingProvider? {
-        let referenceObjects = referenceObjectLoader.enabledReferenceObjects
-        
-        guard !referenceObjects.isEmpty else {
-            fatalError("No reference objects to start tracking")
-        }
-        
-        // Run a new provider every time when entering the immersive space.
-        let objectTracking = ObjectTrackingProvider(referenceObjects: referenceObjects)
-        do {
-            try await arkitSession.run([objectTracking])
-        } catch {
-            print("Error: \(error)" )
-            return nil
-        }
-        self.objectTracking = objectTracking
-        return objectTracking
-    }
     
     var allRequiredAuthorizationsAreGranted: Bool {
         worldSensingAuthorizationStatus == .allowed

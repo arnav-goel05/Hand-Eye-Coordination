@@ -6,6 +6,7 @@ import RealityKit
 import ARKit
 import SwiftUI
 import Combine
+import simd
 
 extension ARKitSession: ObservableObject {}
 extension WorldTrackingProvider: ObservableObject {}
@@ -41,9 +42,9 @@ struct ObjectTrackingRealityView: View {
     
     // Configuration
     private let stationaryThreshold: Float = 0.01 // 1cm
-    private let stationaryDuration: TimeInterval = 1.0 // 1 second to start tracing
-    private let tracingTimeout: TimeInterval = 5.0 // Stop tracing after 5 seconds of no movement
     private let fingerTouchThreshold: Float = 0.02 // 2cm
+    
+    @State private var updateTask: Task<Void, Never>? = nil
 
     var body: some View {
         GeometryReader { geometry in
@@ -52,46 +53,8 @@ struct ObjectTrackingRealityView: View {
                     try? await session.run([worldInfo, handTracking])
                     content.add(root)
                     
-                    // Store screen size for calculations
                     DispatchQueue.main.async {
                         screenSize = geometry.size
-                    }
-
-                    // Object anchor handling
-                    Task {
-                        guard let objectTracking = await appState.startTracking() else { return }
-                        for await update in objectTracking.anchorUpdates {
-                            let anchor = update.anchor, id = anchor.id
-                            switch update.event {
-                            case .added:
-                                let viz = ObjectAnchorVisualization(
-                                    for: anchor,
-                                    using: worldInfo,
-                                    dataManager: dataManager
-                                )
-                                objectVisualizations[id] = viz
-                                trackedAnchors[id] = anchor
-                                root.addChild(viz.entity)
-                                
-                                // Calculate initial button position
-                                await updateButtonPosition(for: anchor, id: id)
-
-                            case .updated:
-                                objectVisualizations[id]?.update(with: anchor)
-                                trackedAnchors[id] = anchor
-                                
-                                // Update button position
-                                await updateButtonPosition(for: anchor, id: id)
-
-                            case .removed:
-                                if let viz = objectVisualizations[id] {
-                                    root.removeChild(viz.entity)
-                                    objectVisualizations.removeValue(forKey: id)
-                                    trackedAnchors.removeValue(forKey: id)
-                                    buttonPositions.removeValue(forKey: id)
-                                }
-                            }
-                        }
                     }
 
                     // Hand-tracking for index tip distance AND finger tracing
@@ -137,11 +100,44 @@ struct ObjectTrackingRealityView: View {
         }
         .onAppear {
             appState.isImmersiveSpaceOpened = true
+
+            let offset = SIMD3<Float>(0, 0, 0) // 0.5m right, 0.5m up, 1m in front of headset
+            let deviceAnchor = worldInfo.queryDeviceAnchor(atTimestamp: CACurrentMediaTime())
+            let virtualPoint: SIMD3<Float>
+            if let deviceAnchor = deviceAnchor {
+                virtualPoint = worldPosition(relativeOffset: offset, deviceTransform: deviceAnchor.originFromAnchorTransform)
+            } else {
+                virtualPoint = offset // fallback
+            }
+            let viz = ObjectAnchorVisualization(using: worldInfo, dataManager: dataManager, virtualPoint: virtualPoint)
+            root.addChild(viz.entity)
+            let id = UUID()
+            objectVisualizations[id] = viz
+            
+            updateTask = Task {
+                while !Task.isCancelled {
+                    let offset = SIMD3<Float>(0, -0.1, -0.75)
+                    let deviceAnchor = worldInfo.queryDeviceAnchor(atTimestamp: CACurrentMediaTime())
+                    let virtualPoint: SIMD3<Float>
+                    if let deviceAnchor = deviceAnchor {
+                        virtualPoint = worldPosition(relativeOffset: offset, deviceTransform: deviceAnchor.originFromAnchorTransform)
+                    } else {
+                        virtualPoint = offset
+                    }
+                    for viz in objectVisualizations.values {
+                        viz.update(virtualPoint: virtualPoint)
+                    }
+                    try? await Task.sleep(nanoseconds: 16_666_667) // ~60 FPS
+                }
+            }
         }
         .onDisappear {
             // Clean up timers
             stationaryTimer?.invalidate()
             stationaryTimer = nil
+            
+            updateTask?.cancel()
+            updateTask = nil
             
             for viz in objectVisualizations.values {
                 root.removeChild(viz.entity)
@@ -291,5 +287,10 @@ struct ObjectTrackingRealityView: View {
         }
         print("Cleared all finger traces")
     }
+    
+    /// Projects a local-space offset to world-space using the current device transform.
+    private func worldPosition(relativeOffset: SIMD3<Float>, deviceTransform: simd_float4x4) -> SIMD3<Float> {
+        let world = deviceTransform * SIMD4<Float>(relativeOffset, 1)
+        return SIMD3<Float>(world.x, world.y, world.z)
+    }
 }
-
