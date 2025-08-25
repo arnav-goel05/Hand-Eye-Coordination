@@ -38,7 +38,7 @@ struct ObjectTrackingRealityView: View {
     @State private var lastMovementTime: TimeInterval = 0
     
     private let stationaryThreshold: Float = 0.01
-    private let fingerTouchThreshold: Float = 0.005
+    private let fingerTouchThreshold: Float = 0.01
     
     @State private var updateTask: Task<Void, Never>? = nil
 
@@ -222,44 +222,42 @@ struct ObjectTrackingRealityView: View {
     
     private func handleFingerTracing(indexTipPosition: SIMD3<Float>, thumbTipPosition: SIMD3<Float>) async {
         let currentTime = CACurrentMediaTime()
-        let distance = simd_length(indexTipPosition - thumbTipPosition)
-            if !traceArmed {
-                if distance < fingerTouchThreshold && !isTracingLocked {
-                    for viz in objectVisualizations.values {
-                        if viz.isFingerNearFirstDot(indexTipPosition) {
-                            traceArmed = true
-                            startTracing()
-                            break
-                        }
-                    }
-                } else {
-                    if isTracing {
-                        stopTracing()
+        if !traceArmed {
+            if !isTracingLocked {
+                for viz in objectVisualizations.values {
+                    if viz.isFingerNearFirstDot(indexTipPosition) {
+                        traceArmed = true
+                        startTracing()
+                        break
                     }
                 }
             } else {
-                if distance < fingerTouchThreshold && !isTracingLocked {
-                    if !isTracing {
-                        startTracing()
-                    }
-                    for viz in objectVisualizations.values {
-                        viz.updateFingerTrace(fingerWorldPos: indexTipPosition)
-                        if viz.isFingerNearLastDot(indexTipPosition) {
-                            if isTracing {
-                                stopTracing()
-                                isTracingLocked = true
-                            }
-                            break
-                        }
-                    }
-                    lastMovementTime = currentTime
-                } else {
-                    if isTracing {
-                        stopTracing()
-                    }
+                if isTracing {
+                    stopTracing()
                 }
             }
-        
+        } else {
+            if !isTracingLocked {
+                if !isTracing {
+                    startTracing()
+                }
+                for viz in objectVisualizations.values {
+                    viz.updateFingerTrace(fingerWorldPos: indexTipPosition)
+                    if viz.isFingerNearLastDot(indexTipPosition) {
+                        if isTracing {
+                            stopTracing()
+                            isTracingLocked = true
+                        }
+                        break
+                    }
+                }
+                lastMovementTime = currentTime
+            } else {
+                if isTracing {
+                    stopTracing()
+                }
+            }
+        }
         lastFingerPosition = indexTipPosition
     }
     
