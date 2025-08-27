@@ -20,8 +20,8 @@ class ObjectAnchorVisualization {
     private var distanceObject: Double = 0.0
     private var lastTextUpdateTime: TimeInterval = 0.0
     
-    private let headsetYOffset: Float = -0.1
-    private let headsetForwardOffset: Float = 0.2
+    private let headsetYOffset: Float = -0.15
+    private let headsetForwardOffset: Float = 0.25
 
     private let worldInfo: WorldTrackingProvider
     private let dataManager: DataManager

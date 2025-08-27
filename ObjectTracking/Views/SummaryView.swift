@@ -88,14 +88,14 @@ struct SummaryView: View {
 //                }()
 //            )
 //        }
-//        .fileExporter(
-//            isPresented: $isExportingCSV,
-//            document: csvURL.map { URLDocument(fileURL: $0) },
-//            contentType: .commaSeparatedText,
-//            defaultFilename: "StraightGuideDots"
-//        ) { result in
-//            csvURL = nil
-//        }
+        .fileExporter(
+            isPresented: $isExportingCSV,
+            document: csvURL.map { URLDocument(fileURL: $0) },
+            contentType: .commaSeparatedText,
+            defaultFilename: "StraightGuideDots"
+        ) { result in
+            csvURL = nil
+        }
        }
 
     private func userTrace(for type: SummaryType) -> [SIMD3<Float>] {

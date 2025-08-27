@@ -51,7 +51,7 @@ struct HomeView: View {
                                         .fixedSize(horizontal: true, vertical: false)
                                 }
                             
-                            Text("Within this assessment, there are three challenges you must complete in increasing order of difficulty. All the best!!!")
+                            Text("Within this assessment, there are six challenges you must complete in increasing order of difficulty. All the best!!!")
                                 .subtitleTextStyle()
                                 .disabled(!isTitleFinished)
                                 .opacity(isTitleFinished ? 1 : 0)
