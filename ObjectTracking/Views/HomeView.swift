@@ -33,7 +33,7 @@ struct HomeView: View {
     
     var body: some View {
         NavigationStack {
-            Group {
+            VStack {
                 if appState.canEnterImmersiveSpace {
                     if !appState.isImmersiveSpaceOpened {
                         VStack(spacing: 50) {
@@ -90,13 +90,25 @@ struct HomeView: View {
                     } else {
                         VStack(spacing: 50) {
                             
-                            Text(dataManager.currentStep == .straight 
-                                 ? "Challenge 1: Straight Line"
-                                 : dataManager.currentStep == .zigzagBeginner 
-                                 ? "Challenge 2: Beginner ZigZag Line"
-                                 : "Challenge 3: Advanced ZigZag Line"
-                            )
-                            .subtitleTextStyle()
+                            let challengeLabel: String = {
+                                switch dataManager.currentStep {
+                                case .straight1:
+                                    return "Challenge 1: Straight Line 1\nTrace using your index finger from the green dot to the red dot."
+                                case .straight2:
+                                    return "Challenge 2: Straight Line 2\nTrace using your index finger from the green dot to the red dot."
+                                case .straight3:
+                                    return "Challenge 3: Straight Line 3\nTrace using your index finger from the green dot to the red dot."
+                                case .straight4:
+                                    return "Challenge 4: Straight Line 4\nTrace using your index finger from the green dot to the red dot."
+                                case .zigzagBeginner:
+                                    return "Challenge 5: Beginner ZigZag Line\nTrace using your index finger from the green dot to the red dot."
+                                case .zigzagAdvanced:
+                                    return "Challenge 6: Advanced ZigZag Line\nTrace using your index finger from the green dot to the red dot."
+                                }
+                            }()
+                            
+                            Text(challengeLabel)
+                                .subtitleTextStyle()
                             
                             HStack(spacing: 50) {
 //                                Button(action: {
@@ -105,7 +117,7 @@ struct HomeView: View {
 //                                    Text("Reset")
 //                                        .buttonTextStyle()
 //                                }
-                                if dataManager.currentStep == .straight || dataManager.currentStep == .zigzagBeginner {
+                                if dataManager.currentStep == .straight1 || dataManager.currentStep == .straight2 || dataManager.currentStep == .straight3 || dataManager.currentStep == .straight4 || dataManager.currentStep == .zigzagBeginner {
                                     Button(action: {
                                         Task {
                                             dataManager.nextStep()

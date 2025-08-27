@@ -8,8 +8,11 @@
 
 import SwiftUI
 
-enum step {
-    case straight
+enum Step {
+    case straight1
+    case straight2
+    case straight3
+    case straight4
     case zigzagBeginner
     case zigzagAdvanced
 }
@@ -19,18 +22,29 @@ class DataManager: ObservableObject {
     @Published var maxAmplitude: Float = 0
     @Published var averageAmplitude: Float = 0
     
-    @Published var straightHeadsetPosition: SIMD3<Float>? = nil
-    @Published var straightObjectPosition: SIMD3<Float>? = nil
+    @Published var straight1HeadsetPosition: SIMD3<Float>? = nil
+    @Published var straight2HeadsetPosition: SIMD3<Float>? = nil
+    @Published var straight3HeadsetPosition: SIMD3<Float>? = nil
+    @Published var straight4HeadsetPosition: SIMD3<Float>? = nil
+
+    @Published var straight1ObjectPosition: SIMD3<Float>? = nil
+    @Published var straight2ObjectPosition: SIMD3<Float>? = nil
+    @Published var straight3ObjectPosition: SIMD3<Float>? = nil
+    @Published var straight4ObjectPosition: SIMD3<Float>? = nil
+    
     @Published var zigzagBeginnerHeadsetPosition: SIMD3<Float>? = nil
     @Published var zigzagBeginnerObjectPosition: SIMD3<Float>? = nil
     @Published var zigzagAdvancedHeadsetPosition: SIMD3<Float>? = nil
     @Published var zigzagAdvancedObjectPosition: SIMD3<Float>? = nil
     
-    @Published var currentStep: step = .straight
+    @Published var currentStep: Step = .straight1
     @Published var stepDidChange: Bool = false
 
     // Changed from [SIMD3<Float>] to [(SIMD3<Float>, TimeInterval)] to store positions along with their timestamps
-    @Published var straightUserTrace: [(SIMD3<Float>, TimeInterval)] = []
+    @Published var straight1UserTrace: [(SIMD3<Float>, TimeInterval)] = []
+    @Published var straight2UserTrace: [(SIMD3<Float>, TimeInterval)] = []
+    @Published var straight3UserTrace: [(SIMD3<Float>, TimeInterval)] = []
+    @Published var straight4UserTrace: [(SIMD3<Float>, TimeInterval)] = []
     @Published var zigzagBeginnerUserTrace: [(SIMD3<Float>, TimeInterval)] = []
     @Published var zigzagAdvancedUserTrace: [(SIMD3<Float>, TimeInterval)] = []
     
@@ -47,40 +61,55 @@ class DataManager: ObservableObject {
     }
     
     func nextStep() {
-        if currentStep == .straight {
+        switch currentStep {
+        case .straight1:
+            currentStep = .straight2
+        case .straight2:
+            currentStep = .straight3
+        case .straight3:
+            currentStep = .straight4
+        case .straight4:
             currentStep = .zigzagBeginner
-        } else if currentStep == .zigzagBeginner {
+        case .zigzagBeginner:
             currentStep = .zigzagAdvanced
+        case .zigzagAdvanced:
+            break
         }
         stepDidChange.toggle()
     }
 
     // Updated to accept and set trace with timestamp data
-    func setUserTrace(_ trace: [(SIMD3<Float>, TimeInterval)], for step: step) {
+    func setUserTrace(_ trace: [(SIMD3<Float>, TimeInterval)], for step: Step) {
         switch step {
-        case .straight: straightUserTrace = trace
+        case .straight1: straight1UserTrace = trace
+        case .straight2: straight2UserTrace = trace
+        case .straight3: straight3UserTrace = trace
+        case .straight4: straight4UserTrace = trace
         case .zigzagBeginner: zigzagBeginnerUserTrace = trace
         case .zigzagAdvanced: zigzagAdvancedUserTrace = trace
         }
     }
 
     // Updated to return trace with timestamp data
-    func getUserTrace(for step: step) -> [(SIMD3<Float>, TimeInterval)] {
+    func getUserTrace(for step: Step) -> [(SIMD3<Float>, TimeInterval)] {
         switch step {
-        case .straight: return straightUserTrace
+        case .straight1: return straight1UserTrace
+        case .straight2: return straight2UserTrace
+        case .straight3: return straight3UserTrace
+        case .straight4: return straight4UserTrace
         case .zigzagBeginner: return zigzagBeginnerUserTrace
         case .zigzagAdvanced: return zigzagAdvancedUserTrace
         }
     }
     
     // Helper method to get just the positions without timestamps for legacy uses
-    func getUserTracePositions(for step: step) -> [SIMD3<Float>] {
+    func getUserTracePositions(for step: Step) -> [SIMD3<Float>] {
         return getUserTrace(for: step).map { $0.0 }
     }
     
     // Export the user trace for the given step as a CSV string
     // CSV columns: time,x,y,z
-    func exportUserTraceCSV(for step: step) -> String {
+    func exportUserTraceCSV(for step: Step) -> String {
         let trace = getUserTrace(for: step)
         // Header line
         var csvString = "time,x,y,z\n"

@@ -8,21 +8,18 @@ struct SummaryView: View {
     @State private var isExportingCSV = false
     @State private var csvURL: URL?
 
-    private enum SummaryType: Identifiable {
-        case straight, zigzagBeginner, zigzagAdvanced
-
-        var id: Int {
-            switch self {
-            case .straight: return 0
-            case .zigzagBeginner: return 1
-            case .zigzagAdvanced: return 2
-            }
-        }
+    enum SummaryType: Int, Identifiable, CaseIterable {
+        case straight1, straight2, straight3, straight4, zigzagBeginner, zigzagAdvanced
+        
+        var id: Int { rawValue }
     }
     
     private func headsetPos(for type: SummaryType) -> SIMD3<Float>? {
         switch type {
-        case .straight: return dataManager.straightHeadsetPosition
+        case .straight1: return dataManager.straight1HeadsetPosition
+        case .straight2: return dataManager.straight2HeadsetPosition
+        case .straight3: return dataManager.straight3HeadsetPosition
+        case .straight4: return dataManager.straight4HeadsetPosition
         case .zigzagBeginner: return dataManager.zigzagBeginnerHeadsetPosition
         case .zigzagAdvanced: return dataManager.zigzagAdvancedHeadsetPosition
         }
@@ -30,7 +27,10 @@ struct SummaryView: View {
 
     private func objectPos(for type: SummaryType) -> SIMD3<Float>? {
         switch type {
-        case .straight: return dataManager.straightObjectPosition
+        case .straight1: return dataManager.straight1ObjectPosition
+        case .straight2: return dataManager.straight2ObjectPosition
+        case .straight3: return dataManager.straight3ObjectPosition
+        case .straight4: return dataManager.straight4ObjectPosition
         case .zigzagBeginner: return dataManager.zigzagBeginnerObjectPosition
         case .zigzagAdvanced: return dataManager.zigzagAdvancedObjectPosition
         }
@@ -40,14 +40,22 @@ struct SummaryView: View {
         VStack(spacing: 50) {
             Text("Overall Summary")
                 .titleTextStyle()
-            Text("Total finger tracking distance: \(String(format: "%.3f", dataManager.totalTraceLength)) m")
-                .subtitleTextStyle()
+//            Text("Total finger tracking distance: \(String(format: "%.3f", dataManager.totalTraceLength)) m")
+//                .subtitleTextStyle()
 //            Text("Maximum amplitude from center line: \(String(format: "%.3f", dataManager.maxAmplitude)) m")
 //                .subtitleTextStyle()
 //            Text("Average amplitude from center line: \(String(format: "%.3f", dataManager.averageAmplitude)) m")
 //                .subtitleTextStyle()
             
-            if let start = headsetPos(for: .straight), let end = objectPos(for: .straight) {
+            // Enable Export All Data button if any of the four straight headset and object positions are non-nil
+            if SummaryType.allCases.contains(where: { type in
+                switch type {
+                case .straight1, .straight2, .straight3, .straight4:
+                    return headsetPos(for: type) != nil && objectPos(for: type) != nil
+                default:
+                    return false
+                }
+            }) {
                 Button("Export All Data") {
                     exportAllData()
                 }
@@ -56,18 +64,12 @@ struct SummaryView: View {
         }
 
 //        HStack(spacing: 15) {
-//            Button("Straight Path") {
-//                selectedSummary = .straight
+//            ForEach(SummaryType.allCases, id: \.self) { type in
+//                Button(type.buttonTitle) {
+//                    selectedSummary = type
+//                }
+//                .buttonTextStyle()
 //            }
-//            .buttonTextStyle()
-//            Button("Zigzag Beginner Path") {
-//                selectedSummary = .zigzagBeginner
-//            }
-//            .buttonTextStyle()
-//            Button("Zigzag Advanced Path") {
-//                selectedSummary = .zigzagAdvanced
-//            }
-//            .buttonTextStyle()
 //        }
 //        .fullScreenCover(item: $selectedSummary) { which in
 //            SummaryImmersiveView(
@@ -76,7 +78,10 @@ struct SummaryView: View {
 //                objectPos: objectPos(for: which),
 //                lineType: {
 //                    switch which {
-//                    case .straight: return .straight
+//                    case .straight1: return .straight1
+//                    case .straight2: return .straight2
+//                    case .straight3: return .straight3
+//                    case .straight4: return .straight4
 //                    case .zigzagBeginner: return .zigzagBeginner
 //                    case .zigzagAdvanced: return .zigzagAdvanced
 //                    }
@@ -95,14 +100,17 @@ struct SummaryView: View {
 
     private func userTrace(for type: SummaryType) -> [SIMD3<Float>] {
         switch type {
-        case .straight: return dataManager.straightUserTrace.map { $0.0 }
+        case .straight1: return dataManager.straight1UserTrace.map { $0.0 }
+        case .straight2: return dataManager.straight2UserTrace.map { $0.0 }
+        case .straight3: return dataManager.straight3UserTrace.map { $0.0 }
+        case .straight4: return dataManager.straight4UserTrace.map { $0.0 }
         case .zigzagBeginner: return dataManager.zigzagBeginnerUserTrace.map { $0.0 }
         case .zigzagAdvanced: return dataManager.zigzagAdvancedUserTrace.map { $0.0 }
         }
     }
 
-    private func exportStraightPathDots() {
-        guard let start = headsetPos(for: .straight), let end = objectPos(for: .straight) else { return }
+    private func exportStraightPathDots(for type: SummaryType) {
+        guard let start = headsetPos(for: type), let end = objectPos(for: type) else { return }
         let dots = generateStraightLineGuideDots(start: start, end: end)
         
         var csvString = "X,Y,Z\n"
@@ -112,7 +120,7 @@ struct SummaryView: View {
         
         do {
             let tempDir = FileManager.default.temporaryDirectory
-            let fileURL = tempDir.appendingPathComponent("StraightGuideDots.csv")
+            let fileURL = tempDir.appendingPathComponent("\(type.rawValueFilenamePrefix)GuideDots.csv")
             try csvString.write(to: fileURL, atomically: true, encoding: .utf8)
             csvURL = fileURL
             isExportingCSV = true
@@ -121,8 +129,15 @@ struct SummaryView: View {
         }
     }
     
-    private func exportStraightUserTrace() {
-        let trace = dataManager.straightUserTrace
+    private func exportStraightUserTrace(for type: SummaryType) {
+        let trace: [(SIMD3<Float>, TimeInterval)]
+        switch type {
+        case .straight1: trace = dataManager.straight1UserTrace
+        case .straight2: trace = dataManager.straight2UserTrace
+        case .straight3: trace = dataManager.straight3UserTrace
+        case .straight4: trace = dataManager.straight4UserTrace
+        default: return
+        }
         guard !trace.isEmpty else { return }
         var csvString = "X,Y,Z\n"
         for point in trace {
@@ -130,7 +145,7 @@ struct SummaryView: View {
         }
         do {
             let tempDir = FileManager.default.temporaryDirectory
-            let fileURL = tempDir.appendingPathComponent("StraightUserTrace.csv")
+            let fileURL = tempDir.appendingPathComponent("\(type.rawValueFilenamePrefix)UserTrace.csv")
             try csvString.write(to: fileURL, atomically: true, encoding: .utf8)
             csvURL = fileURL
             isExportingCSV = true
@@ -297,13 +312,25 @@ struct SummaryView: View {
                 rows.append("\(task),user,\(i),\(entry.time),\(entry.pos.x),\(entry.pos.y),\(entry.pos.z)")
             }
         }
-
-        if let start = headsetPos(for: .straight),
-           let end = objectPos(for: .straight) {
-            appendGuide(task: "straight",
-                        points: generateStraightLineGuideDots(start: start, end: end))
+        
+        // Append all straight guide and user data for straight1..straight4
+        for straightType in [SummaryType.straight1, .straight2, .straight3, .straight4] {
+            if let start = headsetPos(for: straightType),
+               let end = objectPos(for: straightType) {
+                appendGuide(task: straightType.rawValueFilenamePrefix,
+                            points: generateStraightLineGuideDots(start: start, end: end))
+            }
+            let traceArray: [(SIMD3<Float>, TimeInterval)] = {
+                switch straightType {
+                case .straight1: return dataManager.straight1UserTrace
+                case .straight2: return dataManager.straight2UserTrace
+                case .straight3: return dataManager.straight3UserTrace
+                case .straight4: return dataManager.straight4UserTrace
+                default: return []
+                }
+            }()
+            appendUser(task: straightType.rawValueFilenamePrefix, trace: traceArray.map { (pos, time) in (time: time, pos: pos) })
         }
-        appendUser(task: "straight", trace: dataManager.straightUserTrace.map { (pos, time) in (time: time, pos: pos) })
 
         if let start = headsetPos(for: .zigzagBeginner),
            let end = objectPos(for: .zigzagBeginner) {
@@ -390,5 +417,29 @@ private struct URLDocument: FileDocument {
 
     func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
         return try FileWrapper(url: fileURL, options: .immediate)
+    }
+}
+
+extension SummaryView.SummaryType {
+    var rawValueFilenamePrefix: String {
+        switch self {
+        case .straight1: return "straight1"
+        case .straight2: return "straight2"
+        case .straight3: return "straight3"
+        case .straight4: return "straight4"
+        case .zigzagBeginner: return "zigzag_beginner"
+        case .zigzagAdvanced: return "zigzag_advanced"
+        }
+    }
+    
+    var buttonTitle: String {
+        switch self {
+        case .straight1: return "Straight 1"
+        case .straight2: return "Straight 2"
+        case .straight3: return "Straight 3"
+        case .straight4: return "Straight 4"
+        case .zigzagBeginner: return "Zigzag Beginner"
+        case .zigzagAdvanced: return "Zigzag Advanced"
+        }
     }
 }

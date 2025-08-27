@@ -38,7 +38,7 @@ struct ObjectTrackingRealityView: View {
     @State private var lastMovementTime: TimeInterval = 0
     
     private let stationaryThreshold: Float = 0.01
-    private let fingerTouchThreshold: Float = 0.01
+    private let fingerTouchThreshold: Float = 0.005
     
     @State private var updateTask: Task<Void, Never>? = nil
 
@@ -110,10 +110,10 @@ struct ObjectTrackingRealityView: View {
             root.addChild(viz.entity)
             let id = UUID()
             objectVisualizations[id] = viz
-            
+            x
             updateTask = Task {
                 while !Task.isCancelled {
-                    let offset = SIMD3<Float>(0, -0.05, -0.75)
+                    let offset = SIMD3<Float>(0, -0.25, -0.45)
                     let deviceAnchor = worldInfo.queryDeviceAnchor(atTimestamp: CACurrentMediaTime())
                     let virtualPoint: SIMD3<Float>
                     if let deviceAnchor = deviceAnchor {
