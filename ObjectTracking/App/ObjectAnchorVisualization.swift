@@ -21,7 +21,7 @@ class ObjectAnchorVisualization {
     private var lastTextUpdateTime: TimeInterval = 0.0
     
     private let headsetYOffset: Float = -0.15
-    private let headsetForwardOffset: Float = 0.25
+    private let headsetForwardOffset: Float = 0.35
 
     private let worldInfo: WorldTrackingProvider
     private let dataManager: DataManager
@@ -293,7 +293,7 @@ class ObjectAnchorVisualization {
         )
     }
     
-    func isFingerNearFirstDot(_ fingerWorldPos: SIMD3<Float>, threshold: Float = 0.02) -> Bool {
+    func isFingerNearFirstDot(_ fingerWorldPos: SIMD3<Float>, threshold: Float = 0.01) -> Bool {
         let firstDotWorldPos: SIMD3<Float>?
         switch dataManager.currentStep {
         case .straight1:
@@ -313,7 +313,7 @@ class ObjectAnchorVisualization {
         return simd_distance(fingerWorldPos, firstDot) < threshold
     }
     
-    func isFingerNearLastDot(_ fingerWorldPos: SIMD3<Float>, threshold: Float = 0.02) -> Bool {
+    func isFingerNearLastDot(_ fingerWorldPos: SIMD3<Float>, threshold: Float = 0.01) -> Bool {
         let lastDotWorldPos: SIMD3<Float>?
         switch dataManager.currentStep {
         case .straight1:
