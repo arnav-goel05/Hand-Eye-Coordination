@@ -110,6 +110,22 @@ struct HomeView: View {
                             Text(challengeLabel)
                                 .subtitleTextStyle()
                             
+                            // Progress indicators
+                            VStack(spacing: 10) {
+                                Text("Attempt \(dataManager.currentAttempt) of 10")
+                                    .font(.title2)
+                                    .foregroundColor(.blue)
+                                
+                                ProgressView(value: Double(dataManager.getCompletedAttempts(for: dataManager.currentStep)), total: 10.0)
+                                    .progressViewStyle(LinearProgressViewStyle())
+                                    .frame(width: 300)
+                                
+                                Text("Completed: \(dataManager.getCompletedAttempts(for: dataManager.currentStep))/10")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding()
+                            
                             HStack(spacing: 50) {
 //                                Button(action: {
 //                                    //TODO
@@ -117,13 +133,17 @@ struct HomeView: View {
 //                                    Text("Reset")
 //                                        .buttonTextStyle()
 //                                }
-                                if dataManager.currentStep == .straight1 || dataManager.currentStep == .straight2 || dataManager.currentStep == .straight3 || dataManager.currentStep == .straight4 || dataManager.currentStep == .zigzagBeginner {
+                                if !dataManager.isStepComplete(for: dataManager.currentStep) {
+                                    Text("Complete all 10 attempts to proceed")
+                                        .font(.body)
+                                        .foregroundColor(.orange)
+                                } else if dataManager.currentStep == .straight1 || dataManager.currentStep == .straight2 || dataManager.currentStep == .straight3 || dataManager.currentStep == .straight4 || dataManager.currentStep == .zigzagBeginner {
                                     Button(action: {
                                         Task {
                                             dataManager.nextStep()
                                         }
                                     }) {
-                                        Text("Next")
+                                        Text("Next Challenge")
                                             .buttonTextStyle()
                                     }
                                 } else {
@@ -134,7 +154,7 @@ struct HomeView: View {
                                             showSummary = true
                                         }
                                     }) {
-                                        Text("Complete")
+                                        Text("Complete Assessment")
                                             .buttonTextStyle()
                                     }
                                 }
@@ -142,11 +162,6 @@ struct HomeView: View {
                         }
                         .padding(.horizontal, 100)
                     }
-                } else {
-                    InfoLabel(appState: appState)
-                        .padding(.horizontal, 30)
-                        .frame(minWidth: 400, minHeight: 300)
-                        .fixedSize()
                 }
             }
             .onChange(of: scenePhase, initial: true) {
@@ -181,13 +196,6 @@ struct HomeView: View {
                     appState.providersStoppedWithError = false
                 }
             })
-            .task {
-                // Ask for authorization before a person attempts to open the immersive space.
-                // This gives the app opportunity to respond gracefully if authorization isn't granted.
-                if appState.allRequiredProvidersAreSupported {
-                    await appState.requestWorldSensingAuthorization()
-                }
-            }
             .task {
                 // Start monitoring for changes in authorization, in case a person brings the
                 // Settings app to the foreground and changes authorizations there.

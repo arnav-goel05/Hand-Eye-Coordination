@@ -149,8 +149,7 @@ struct ObjectTrackingRealityView: View {
             for viz in objectVisualizations.values {
                 viz.resetVisualizations()
             }
-            traceArmed = false
-            isTracingLocked = false
+            resetForNextAttempt()
         }
     }
     
@@ -245,7 +244,10 @@ struct ObjectTrackingRealityView: View {
                     viz.updateFingerTrace(fingerWorldPos: indexTipPosition)
                     if viz.isFingerNearLastDot(indexTipPosition) {
                         if isTracing {
+                            // First stop tracing to save the trace data
                             stopTracing()
+                            // Then complete the attempt
+                            await completeCurrentAttempt()
                             isTracingLocked = true
                         }
                         break
@@ -286,6 +288,61 @@ struct ObjectTrackingRealityView: View {
         
         let tracingDuration = CACurrentMediaTime() - tracingStartTime
         print("Stopped finger tracing after \(String(format: "%.2f", tracingDuration)) seconds")
+    }
+    
+    private func resetForNextAttempt() {
+        // Reset tracing state
+        traceArmed = false
+        isTracingLocked = false
+        isTracing = false
+        
+        // Only clear user traces, keep guide lines visible
+        for viz in objectVisualizations.values {
+            viz.clearTrace()
+            // Ensure guide lines are visible for current step
+            viz.hideAllButCurrentStepDots()
+        }
+    }
+    
+    private func completeCurrentAttempt() async {
+        // Calculate metrics for current attempt
+        var totalTraceLength: Float = 0
+        var maxAmplitude: Float = 0
+        var averageAmplitude: Float = 0
+        
+        for viz in objectVisualizations.values {
+            totalTraceLength = viz.getTraceLength()
+            
+            // Calculate amplitude metrics (distance from ideal path)
+            let tracePoints = viz.getTracePoints()
+            if !tracePoints.isEmpty {
+                // Get distances to ideal path for amplitude calculation
+                let distances = tracePoints.compactMap { point in
+                    viz.distanceFromFinger(to: point)
+                }
+                
+                if !distances.isEmpty {
+                    maxAmplitude = distances.max() ?? 0
+                    averageAmplitude = distances.reduce(0, +) / Float(distances.count)
+                }
+            }
+        }
+        
+        // Update dataManager with current metrics
+        dataManager.setTotalTraceLength(totalTraceLength)
+        dataManager.setMaxAmplitude(maxAmplitude)
+        dataManager.setAverageAmplitude(averageAmplitude)
+        
+        // Save the current attempt
+        dataManager.saveCurrentAttempt()
+        
+        print("Completed attempt \(dataManager.currentAttempt - 1) for step \(dataManager.currentStep)")
+        print("Total attempts for current step: \(dataManager.getCompletedAttempts(for: dataManager.currentStep))")
+        
+        // Reset for next attempt after a short delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            self.resetForNextAttempt()
+        }
     }
     
     private func clearTrace() {

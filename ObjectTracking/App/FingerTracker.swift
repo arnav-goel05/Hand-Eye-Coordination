@@ -56,6 +56,12 @@ class FingerTracker {
         traceStartTime = nil
         print("Cleared all finger traces")
     }
+    
+    func resetForNewAttempt() {
+        clearTrace()
+        isTracing = false
+        print("Reset finger tracker for new attempt")
+    }
 
     func updateFingerTrace(fingerWorldPos: SIMD3<Float>, relativeTo entity: Entity) {
         guard isTracing, !traceSegments.isEmpty, let startTime = traceStartTime else { return }

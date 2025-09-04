@@ -17,6 +17,38 @@ enum Step {
     case zigzagAdvanced
 }
 
+struct TraceAttempt: Codable {
+    let attemptNumber: Int
+    let timestamp: Date
+    let userTrace: [TrackedPoint]
+    let headsetPosition: TrackedPoint?
+    let objectPosition: TrackedPoint?
+    let totalTraceLength: Float
+    let maxAmplitude: Float
+    let averageAmplitude: Float
+    
+    struct TrackedPoint: Codable {
+        let x: Float
+        let y: Float
+        let z: Float
+        let timestamp: TimeInterval
+    }
+    
+    // Convenience initializer that converts SIMD3<Float> to TrackedPoint
+    init(attemptNumber: Int, timestamp: Date, userTrace: [(SIMD3<Float>, TimeInterval)], 
+         headsetPosition: SIMD3<Float>?, objectPosition: SIMD3<Float>?, 
+         totalTraceLength: Float, maxAmplitude: Float, averageAmplitude: Float) {
+        self.attemptNumber = attemptNumber
+        self.timestamp = timestamp
+        self.userTrace = userTrace.map { TrackedPoint(x: $0.0.x, y: $0.0.y, z: $0.0.z, timestamp: $0.1) }
+        self.headsetPosition = headsetPosition.map { TrackedPoint(x: $0.x, y: $0.y, z: $0.z, timestamp: 0) }
+        self.objectPosition = objectPosition.map { TrackedPoint(x: $0.x, y: $0.y, z: $0.z, timestamp: 0) }
+        self.totalTraceLength = totalTraceLength
+        self.maxAmplitude = maxAmplitude
+        self.averageAmplitude = averageAmplitude
+    }
+}
+
 class DataManager: ObservableObject {
     @Published var totalTraceLength: Float = 0
     @Published var maxAmplitude: Float = 0
@@ -38,9 +70,18 @@ class DataManager: ObservableObject {
     @Published var zigzagAdvancedObjectPosition: SIMD3<Float>? = nil
     
     @Published var currentStep: Step = .straight1
+    @Published var currentAttempt: Int = 1
     @Published var stepDidChange: Bool = false
 
-    // Changed from [SIMD3<Float>] to [(SIMD3<Float>, TimeInterval)] to store positions along with their timestamps
+    // Store all attempts for each step
+    @Published var straight1Attempts: [TraceAttempt] = []
+    @Published var straight2Attempts: [TraceAttempt] = []
+    @Published var straight3Attempts: [TraceAttempt] = []
+    @Published var straight4Attempts: [TraceAttempt] = []
+    @Published var zigzagBeginnerAttempts: [TraceAttempt] = []
+    @Published var zigzagAdvancedAttempts: [TraceAttempt] = []
+
+    // Legacy support - current attempt traces
     @Published var straight1UserTrace: [(SIMD3<Float>, TimeInterval)] = []
     @Published var straight2UserTrace: [(SIMD3<Float>, TimeInterval)] = []
     @Published var straight3UserTrace: [(SIMD3<Float>, TimeInterval)] = []
@@ -58,6 +99,77 @@ class DataManager: ObservableObject {
     
     func setAverageAmplitude(_ amplitude: Float) {
         self.averageAmplitude = amplitude
+    }
+    
+    func getCompletedAttempts(for step: Step) -> Int {
+        switch step {
+        case .straight1: return straight1Attempts.count
+        case .straight2: return straight2Attempts.count
+        case .straight3: return straight3Attempts.count
+        case .straight4: return straight4Attempts.count
+        case .zigzagBeginner: return zigzagBeginnerAttempts.count
+        case .zigzagAdvanced: return zigzagAdvancedAttempts.count
+        }
+    }
+    
+    func isStepComplete(for step: Step) -> Bool {
+        return getCompletedAttempts(for: step) >= 10
+    }
+    
+    func canMoveToNextStep() -> Bool {
+        return isStepComplete(for: currentStep)
+    }
+    
+    func saveCurrentAttempt() {
+        let attempt = TraceAttempt(
+            attemptNumber: currentAttempt,
+            timestamp: Date(),
+            userTrace: getUserTrace(for: currentStep),
+            headsetPosition: getHeadsetPosition(for: currentStep),
+            objectPosition: getObjectPosition(for: currentStep),
+            totalTraceLength: totalTraceLength,
+            maxAmplitude: maxAmplitude,
+            averageAmplitude: averageAmplitude
+        )
+        
+        switch currentStep {
+        case .straight1: straight1Attempts.append(attempt)
+        case .straight2: straight2Attempts.append(attempt)
+        case .straight3: straight3Attempts.append(attempt)
+        case .straight4: straight4Attempts.append(attempt)
+        case .zigzagBeginner: zigzagBeginnerAttempts.append(attempt)
+        case .zigzagAdvanced: zigzagAdvancedAttempts.append(attempt)
+        }
+        
+        // Move to next attempt or next step
+        if currentAttempt < 10 {
+            currentAttempt += 1
+        } else {
+            currentAttempt = 1
+            nextStep()
+        }
+    }
+    
+    private func getHeadsetPosition(for step: Step) -> SIMD3<Float>? {
+        switch step {
+        case .straight1: return straight1HeadsetPosition
+        case .straight2: return straight2HeadsetPosition
+        case .straight3: return straight3HeadsetPosition
+        case .straight4: return straight4HeadsetPosition
+        case .zigzagBeginner: return zigzagBeginnerHeadsetPosition
+        case .zigzagAdvanced: return zigzagAdvancedHeadsetPosition
+        }
+    }
+    
+    private func getObjectPosition(for step: Step) -> SIMD3<Float>? {
+        switch step {
+        case .straight1: return straight1ObjectPosition
+        case .straight2: return straight2ObjectPosition
+        case .straight3: return straight3ObjectPosition
+        case .straight4: return straight4ObjectPosition
+        case .zigzagBeginner: return zigzagBeginnerObjectPosition
+        case .zigzagAdvanced: return zigzagAdvancedObjectPosition
+        }
     }
     
     func nextStep() {
@@ -119,5 +231,48 @@ class DataManager: ObservableObject {
             csvString.append(line)
         }
         return csvString
+    }
+    
+    // Export all attempts for all steps as comprehensive CSV
+    func exportAllAttemptsToCSV() -> String {
+        var csvContent = "Step,AttemptNumber,Timestamp,TotalTraceLength,MaxAmplitude,AverageAmplitude,TracePointX,TracePointY,TracePointZ,TracePointTime\n"
+        
+        let allSteps: [Step] = [.straight1, .straight2, .straight3, .straight4, .zigzagBeginner, .zigzagAdvanced]
+        
+        for step in allSteps {
+            let attempts = getAttempts(for: step)
+            for attempt in attempts {
+                let stepName = getStepName(step)
+                let baseInfo = "\(stepName),\(attempt.attemptNumber),\(attempt.timestamp),\(attempt.totalTraceLength),\(attempt.maxAmplitude),\(attempt.averageAmplitude)"
+                
+                for point in attempt.userTrace {
+                    csvContent += "\(baseInfo),\(point.x),\(point.y),\(point.z),\(point.timestamp)\n"
+                }
+            }
+        }
+        
+        return csvContent
+    }
+    
+    func getAttempts(for step: Step) -> [TraceAttempt] {
+        switch step {
+        case .straight1: return straight1Attempts
+        case .straight2: return straight2Attempts
+        case .straight3: return straight3Attempts
+        case .straight4: return straight4Attempts
+        case .zigzagBeginner: return zigzagBeginnerAttempts
+        case .zigzagAdvanced: return zigzagAdvancedAttempts
+        }
+    }
+    
+    private func getStepName(_ step: Step) -> String {
+        switch step {
+        case .straight1: return "Straight1"
+        case .straight2: return "Straight2"
+        case .straight3: return "Straight3"
+        case .straight4: return "Straight4"
+        case .zigzagBeginner: return "ZigzagBeginner"
+        case .zigzagAdvanced: return "ZigzagAdvanced"
+        }
     }
 }

@@ -37,12 +37,8 @@ class AppState {
         worldSensingAuthorizationStatus == .allowed
     }
 
-    var allRequiredProvidersAreSupported: Bool {
-        ObjectTrackingProvider.isSupported
-    }
-
     var canEnterImmersiveSpace: Bool {
-        allRequiredAuthorizationsAreGranted && allRequiredProvidersAreSupported
+        allRequiredAuthorizationsAreGranted
     }
 
     func requestWorldSensingAuthorization() async {
