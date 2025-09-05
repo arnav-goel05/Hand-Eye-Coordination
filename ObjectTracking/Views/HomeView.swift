@@ -119,20 +119,11 @@ struct HomeView: View {
                                 ProgressView(value: Double(dataManager.getCompletedAttempts(for: dataManager.currentStep)), total: 10.0)
                                     .progressViewStyle(LinearProgressViewStyle())
                                     .frame(width: 300)
-                                
-                                Text("Completed: \(dataManager.getCompletedAttempts(for: dataManager.currentStep))/10")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
+                    
                             }
                             .padding()
                             
                             HStack(spacing: 50) {
-//                                Button(action: {
-//                                    //TODO
-//                                }) {
-//                                    Text("Reset")
-//                                        .buttonTextStyle()
-//                                }
                                 if !dataManager.isStepComplete(for: dataManager.currentStep) {
                                     Text("Complete all 10 attempts to proceed")
                                         .font(.body)

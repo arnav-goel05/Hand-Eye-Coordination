@@ -110,7 +110,14 @@ struct ObjectTrackingRealityView: View {
             root.addChild(viz.entity)
             let id = UUID()
             objectVisualizations[id] = viz
-            x
+            
+            // Show initial guide lines and instructions immediately after a brief delay
+            Task {
+                try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 second delay
+                viz.hideAllButCurrentStepDots()
+                viz.showInitialInstructions()
+            }
+            
             updateTask = Task {
                 while !Task.isCancelled {
                     let offset = SIMD3<Float>(0, -0.20, -0.60)
@@ -148,8 +155,20 @@ struct ObjectTrackingRealityView: View {
         .onChange(of: dataManager.stepDidChange) { newStep in
             for viz in objectVisualizations.values {
                 viz.resetVisualizations()
+                viz.hideAllButCurrentStepDots()
             }
-            resetForNextAttempt()
+            // Reset tracing state for new step
+            traceArmed = false
+            isTracingLocked = false
+            isTracing = false
+            
+            // Show instructions after a brief delay to ensure dots are visible first
+            Task {
+                try? await Task.sleep(nanoseconds: 50_000_000) // 0.05 second delay
+                for viz in objectVisualizations.values {
+                    viz.showInitialInstructions()
+                }
+            }
         }
     }
     
@@ -301,6 +320,8 @@ struct ObjectTrackingRealityView: View {
             viz.clearTrace()
             // Ensure guide lines are visible for current step
             viz.hideAllButCurrentStepDots()
+            // Show initial instructions for next attempt
+            viz.showInitialInstructions()
         }
     }
     

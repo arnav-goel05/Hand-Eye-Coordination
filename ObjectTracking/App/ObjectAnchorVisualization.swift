@@ -39,6 +39,11 @@ class ObjectAnchorVisualization {
     private var instructionText: ModelEntity?
     private var textScale: SIMD3<Float> = [1, 1, 1]
     
+    // Instruction attachments for guiding the user
+    private var startInstructionEntity: Entity?
+    private var endInstructionEntity: Entity?
+    private var isTracing: Bool = false
+    
     var virtualPoint: SIMD3<Float>
     
     /// Returns a point a bit ahead of the headset, with vertical offset, given a Transform.
@@ -149,6 +154,9 @@ class ObjectAnchorVisualization {
         
         virtualPoint = newVirtualPoint
         
+        // Update instruction positions to follow the moving dots
+        updateInstructionPositions()
+        
         guard let devicePose = worldInfo.queryDeviceAnchor(atTimestamp: CACurrentMediaTime()) else {
             switch dataManager.currentStep {
             case .straight1:
@@ -237,11 +245,21 @@ class ObjectAnchorVisualization {
             zigZagLineRendererAdvanced.freezeDots()
         }
         fingerTracker.startTracing()
+        isTracing = true
+        
+        // Hide start instruction and show end instruction
+        hideStartInstruction()
+        showEndInstruction()
        // updateInstructionText()
     }
     
     func stopTracing() {
         fingerTracker.stopTracing()
+        isTracing = false
+        
+        // Hide end instruction when tracing stops
+        hideEndInstruction()
+        
         let stepType = dataManager.currentStep
         // userTrace now stores tuples of (position, timestamp)
         let userTrace: [(SIMD3<Float>, TimeInterval)] = fingerTracker.getTimedTracePoints()
@@ -283,6 +301,13 @@ class ObjectAnchorVisualization {
     
     func clearTrace() {
         fingerTracker.clearTrace()
+        isTracing = false
+        
+        // Reset instructions to initial state - only show start instruction if not tracing
+        hideEndInstruction()
+        if !isTracing {
+            showStartInstruction()
+        }
        // updateInstructionText()
     }
     
@@ -411,7 +436,19 @@ class ObjectAnchorVisualization {
             zigZagLineRendererAdvanced.hideAllDots()
         }
         fingerTracker.clearTrace()
+        isTracing = false
+        
+        // Hide all instructions when resetting
+        hideStartInstruction()
+        hideEndInstruction()
        // updateInstructionText()
+    }
+    
+    func showInitialInstructions() {
+        // Show start instruction for the current step when ready
+        if !isTracing {
+            showStartInstruction()
+        }
     }
     
 //    private func createWindowPane() {
@@ -557,5 +594,171 @@ class ObjectAnchorVisualization {
 //        : amplitudes.reduce(0, +) / Float(amplitudes.count)
 //        dataManager.setAverageAmplitude(avgAmp)
 //    }
+    
+    // MARK: - Instruction Attachments
+    
+    private func updateInstructionPositions() {
+        // Update start instruction position if it exists
+        if let startInstruction = startInstructionEntity,
+           let firstDotPos = getFirstDotPosition() {
+            startInstruction.position = firstDotPos + SIMD3<Float>(0, 0.03, 0)
+            orientWindowTowardsUser(startInstruction)
+        }
+        
+        // Update end instruction position if it exists
+        if let endInstruction = endInstructionEntity,
+           let lastDotPos = getLastDotPosition() {
+            endInstruction.position = lastDotPos + SIMD3<Float>(0, 0.03, 0)
+            orientWindowTowardsUser(endInstruction)
+        }
+    }
+    
+    private func createInstructionWindow(text: String, textColor: UIColor = .white) -> Entity {
+        let container = Entity()
+        
+        // Create text only (no background panel)
+        let textMesh = MeshResource.generateText(
+            text,
+            extrusionDepth: 0.0005,
+            font: .systemFont(ofSize: 0.01, weight: .medium), // Smaller font size
+            containerFrame: CGRect(x: 0, y: 0, width: 150, height: 30),
+            alignment: .center
+        )
+        
+        var textMaterial = UnlitMaterial()
+        textMaterial.color = .init(tint: textColor)
+        
+        let textEntity = ModelEntity(mesh: textMesh, materials: [textMaterial])
+        
+        // Center the text
+        let textBounds = textMesh.bounds
+        textEntity.position = SIMD3<Float>(
+            -textBounds.center.x,
+            -textBounds.center.y,
+            -textBounds.center.z
+        )
+        
+        container.addChild(textEntity)
+        
+        return container
+    }
+    
+    func showStartInstruction() {
+        hideStartInstruction() // Remove any existing instruction
+        
+        // Ensure we have a valid first dot position before showing instruction
+        guard let firstDotPos = getFirstDotPosition() else { 
+            // If no position available, try again after a short delay
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                self.showStartInstruction()
+            }
+            return 
+        }
+        
+        let instructionWindow = createInstructionWindow(
+            text: "Start tracing from here",
+            textColor: .systemGreen
+        )
+        
+        instructionWindow.position = firstDotPos + SIMD3<Float>(0, 0.03, 0) // Closer to the dot
+        
+        // Make it face the user
+        orientWindowTowardsUser(instructionWindow)
+        
+        entity.addChild(instructionWindow)
+        startInstructionEntity = instructionWindow
+    }
+    
+    func hideStartInstruction() {
+        startInstructionEntity?.removeFromParent()
+        startInstructionEntity = nil
+    }
+    
+    func showEndInstruction() {
+        hideEndInstruction() // Remove any existing instruction
+        
+        // Ensure we have a valid last dot position before showing instruction
+        guard let lastDotPos = getLastDotPosition() else { 
+            // If no position available, try again after a short delay
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                self.showEndInstruction()
+            }
+            return 
+        }
+        
+        let instructionWindow = createInstructionWindow(
+            text: "Trace until here",
+            textColor: .systemRed
+        )
+        
+        instructionWindow.position = lastDotPos + SIMD3<Float>(0, 0.03, 0) // Closer to the dot
+        
+        // Make it face the user
+        orientWindowTowardsUser(instructionWindow)
+        
+        entity.addChild(instructionWindow)
+        endInstructionEntity = instructionWindow
+    }
+    
+    func hideEndInstruction() {
+        endInstructionEntity?.removeFromParent()
+        endInstructionEntity = nil
+    }
+    
+    private func orientWindowTowardsUser(_ window: Entity) {
+        if let devicePose = worldInfo.queryDeviceAnchor(atTimestamp: CACurrentMediaTime()) {
+            let devicePos = SIMD3<Float>(
+                devicePose.originFromAnchorTransform.columns.3.x,
+                devicePose.originFromAnchorTransform.columns.3.y,
+                devicePose.originFromAnchorTransform.columns.3.z
+            )
+            let windowPos = window.position
+            let lookDirection = normalize(devicePos - windowPos)
+            
+            // Calculate rotation to face the user
+            let forward = SIMD3<Float>(0, 0, 1)
+            let angle = acos(simd_dot(forward, lookDirection))
+            let axis = simd_cross(forward, lookDirection)
+            
+            if simd_length(axis) > 0.001 {
+                let normalizedAxis = normalize(axis)
+                window.transform.rotation = simd_quatf(angle: angle, axis: normalizedAxis)
+            }
+        }
+    }
+    
+    private func getFirstDotPosition() -> SIMD3<Float>? {
+        switch dataManager.currentStep {
+        case .straight1:
+            return straightLineRenderer1.getFirstDotWorldPosition(relativeTo: entity)
+        case .straight2:
+            return straightLineRenderer2.getFirstDotWorldPosition(relativeTo: entity)
+        case .straight3:
+            return straightLineRenderer3.getFirstDotWorldPosition(relativeTo: entity)
+        case .straight4:
+            return straightLineRenderer4.getFirstDotWorldPosition(relativeTo: entity)
+        case .zigzagBeginner:
+            return zigZagLineRendererBeginner.getFirstDotWorldPosition(relativeTo: entity)
+        case .zigzagAdvanced:
+            return zigZagLineRendererAdvanced.getFirstDotWorldPosition(relativeTo: entity)
+        }
+    }
+    
+    private func getLastDotPosition() -> SIMD3<Float>? {
+        switch dataManager.currentStep {
+        case .straight1:
+            return straightLineRenderer1.getLastDotWorldPosition(relativeTo: entity)
+        case .straight2:
+            return straightLineRenderer2.getLastDotWorldPosition(relativeTo: entity)
+        case .straight3:
+            return straightLineRenderer3.getLastDotWorldPosition(relativeTo: entity)
+        case .straight4:
+            return straightLineRenderer4.getLastDotWorldPosition(relativeTo: entity)
+        case .zigzagBeginner:
+            return zigZagLineRendererBeginner.getLastDotWorldPosition(relativeTo: entity)
+        case .zigzagAdvanced:
+            return zigZagLineRendererAdvanced.getLastDotWorldPosition(relativeTo: entity)
+        }
+    }
 }
 
