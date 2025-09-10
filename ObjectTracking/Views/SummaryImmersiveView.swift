@@ -95,7 +95,7 @@ struct SummaryImmersiveView: View {
                         }
                     case .zigzagBeginner:
                         let amplitude: Float = 0.05
-                        let frequency = 4
+                        let frequency = 2
                         let guideDots = generateZigZagGuideDots(start: shiftedObjectPos, end: headsetPos, amplitude: amplitude, frequency: frequency)
                         let center = guideDots.reduce(.zero, +) / Float(guideDots.count)
                         for pt in guideDots {
@@ -114,7 +114,7 @@ struct SummaryImmersiveView: View {
                         }
                     case .zigzagAdvanced:
                         let amplitude: Float = 0.05
-                        let frequency = 8
+                        let frequency = 4
                         let guideDots = generateZigZagGuideDots(start: shiftedObjectPos, end: headsetPos, amplitude: amplitude, frequency: frequency)
                         let center = guideDots.reduce(.zero, +) / Float(guideDots.count)
                         for pt in guideDots {

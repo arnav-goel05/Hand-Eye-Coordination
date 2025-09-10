@@ -40,14 +40,7 @@ struct SummaryView: View {
         VStack(spacing: 50) {
             Text("Overall Summary")
                 .titleTextStyle()
-//            Text("Total finger tracking distance: \(String(format: "%.3f", dataManager.totalTraceLength)) m")
-//                .subtitleTextStyle()
-//            Text("Maximum amplitude from center line: \(String(format: "%.3f", dataManager.maxAmplitude)) m")
-//                .subtitleTextStyle()
-//            Text("Average amplitude from center line: \(String(format: "%.3f", dataManager.averageAmplitude)) m")
-//                .subtitleTextStyle()
             
-            // Enable Export All Data button if any of the four straight headset and object positions are non-nil
             if SummaryType.allCases.contains(where: { type in
                 switch type {
                 case .straight1, .straight2, .straight3, .straight4:
@@ -251,7 +244,7 @@ struct SummaryView: View {
 //        
 //        if let startZigzagBeginner = headsetPos(for: .zigzagBeginner), let endZigzagBeginner = objectPos(for: .zigzagBeginner) {
 //            let amplitude: Float = 0.05 // beginner
-//            let frequency = 4
+//            let frequency = 2
 //            let dots = generateZigZagGuideDots(start: startZigzagBeginner, end: endZigzagBeginner, amplitude: amplitude, frequency: frequency)
 //            if !dots.isEmpty {
 //                combinedCSV += "Zigzag Beginner Guide Dots\nX,Y,Z\n"
@@ -269,7 +262,7 @@ struct SummaryView: View {
 //        
 //        if let startZigzagAdvanced = headsetPos(for: .zigzagAdvanced), let endZigzagAdvanced = objectPos(for: .zigzagAdvanced) {
 //            let amplitude: Float = 0.05 // beginner
-//            let frequency = 8
+//            let frequency = 4
 //            let dots = generateZigZagGuideDots(start: startZigzagAdvanced, end: endZigzagAdvanced, amplitude: amplitude, frequency: frequency)
 //            if !dots.isEmpty {
 //                combinedCSV += "Zigzag Advanced Guide Dots\nX,Y,Z\n"
@@ -299,52 +292,48 @@ struct SummaryView: View {
 //    }
 //
     private func exportAllData() {
-        var rows: [String] = ["task,path_type,point_idx,timestamp,x,y,z"]
+        var rows: [String] = ["task,path_type,attempt_number,point_idx,timestamp,x,y,z"]
 
         func appendGuide(task: String, points: [SIMD3<Float>]) {
             for (i, p) in points.enumerated() {
-                rows.append("\(task),guide,\(i),,\(p.x),\(p.y),\(p.z)")
+                rows.append("\(task),guide,,\(i),,\(p.x),\(p.y),\(p.z)")
             }
         }
 
-        func appendUser(task: String, trace: [(time: TimeInterval, pos: SIMD3<Float>)]) {
-            for (i, entry) in trace.enumerated() {
-                rows.append("\(task),user,\(i),\(entry.time),\(entry.pos.x),\(entry.pos.y),\(entry.pos.z)")
+        func appendUserAttempt(task: String, attemptNumber: Int, trace: [TraceAttempt.TrackedPoint]) {
+            for (i, point) in trace.enumerated() {
+                rows.append("\(task),user,\(attemptNumber),\(i),\(point.timestamp),\(point.x),\(point.y),\(point.z)")
             }
         }
         
-        // Append all straight guide and user data for straight1..straight4
-        for straightType in [SummaryType.straight1, .straight2, .straight3, .straight4] {
-            if let start = headsetPos(for: straightType),
-               let end = objectPos(for: straightType) {
-                appendGuide(task: straightType.rawValueFilenamePrefix,
-                            points: generateStraightLineGuideDots(start: start, end: end))
-            }
-            let traceArray: [(SIMD3<Float>, TimeInterval)] = {
-                switch straightType {
-                case .straight1: return dataManager.straight1UserTrace
-                case .straight2: return dataManager.straight2UserTrace
-                case .straight3: return dataManager.straight3UserTrace
-                case .straight4: return dataManager.straight4UserTrace
-                default: return []
+        // Process all task types
+        let allTaskTypes: [SummaryType] = [.straight1, .straight2, .straight3, .straight4, .zigzagBeginner, .zigzagAdvanced]
+        
+        for taskType in allTaskTypes {
+            let taskName = taskType.rawValueFilenamePrefix
+            
+            // Add guide dots first
+            if let start = headsetPos(for: taskType), let end = objectPos(for: taskType) {
+                let guideDots: [SIMD3<Float>]
+                
+                switch taskType {
+                case .zigzagBeginner:
+                    guideDots = generateZigZagGuideDots(start: start, end: end, amplitude: 0.05, frequency: 2)
+                case .zigzagAdvanced:
+                    guideDots = generateZigZagGuideDots(start: start, end: end, amplitude: 0.05, frequency: 4)
+                default:
+                    guideDots = generateStraightLineGuideDots(start: start, end: end)
                 }
-            }()
-            appendUser(task: straightType.rawValueFilenamePrefix, trace: traceArray.map { (pos, time) in (time: time, pos: pos) })
+                
+                appendGuide(task: taskName, points: guideDots)
+            }
+            
+            // Add all user attempts (1-10) for this task
+            let attempts = dataManager.getAttempts(for: stepFromSummaryType(taskType))
+            for attempt in attempts {
+                appendUserAttempt(task: taskName, attemptNumber: attempt.attemptNumber, trace: attempt.userTrace)
+            }
         }
-
-        if let start = headsetPos(for: .zigzagBeginner),
-           let end = objectPos(for: .zigzagBeginner) {
-            appendGuide(task: "zigzag_beginner",
-                        points: generateZigZagGuideDots(start: start, end: end, amplitude: 0.05, frequency: 4))
-        }
-        appendUser(task: "zigzag_beginner", trace: dataManager.zigzagBeginnerUserTrace.map { (pos, time) in (time: time, pos: pos) })
-
-        if let start = headsetPos(for: .zigzagAdvanced),
-           let end = objectPos(for: .zigzagAdvanced) {
-            appendGuide(task: "zigzag_advanced",
-                        points: generateZigZagGuideDots(start: start, end: end, amplitude: 0.05, frequency: 8))
-        }
-        appendUser(task: "zigzag_advanced", trace: dataManager.zigzagAdvancedUserTrace.map { (pos, time) in (time: time, pos: pos) })
 
         let csv = rows.joined(separator: "\n")
         guard rows.count > 1 else { return }
@@ -356,6 +345,17 @@ struct SummaryView: View {
             csvURL = fileURL
             isExportingCSV = true
         } catch {
+        }
+    }
+    
+    private func stepFromSummaryType(_ summaryType: SummaryType) -> Step {
+        switch summaryType {
+        case .straight1: return .straight1
+        case .straight2: return .straight2
+        case .straight3: return .straight3
+        case .straight4: return .straight4
+        case .zigzagBeginner: return .zigzagBeginner
+        case .zigzagAdvanced: return .zigzagAdvanced
         }
     }
 
