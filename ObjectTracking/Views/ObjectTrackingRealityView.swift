@@ -119,7 +119,7 @@ struct ObjectTrackingRealityView: View {
             
             updateTask = Task {
                 while !Task.isCancelled {
-                    let offset = SIMD3<Float>(0, -0.20, -0.60)
+                    let offset = SIMD3<Float>(0, -0.20, -0.50)
                     let deviceAnchor = worldInfo.queryDeviceAnchor(atTimestamp: CACurrentMediaTime())
                     let virtualPoint: SIMD3<Float>
                     if let deviceAnchor = deviceAnchor {

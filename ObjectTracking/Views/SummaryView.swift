@@ -40,7 +40,14 @@ struct SummaryView: View {
         VStack(spacing: 50) {
             Text("Overall Summary")
                 .titleTextStyle()
+//            Text("Total finger tracking distance: \(String(format: "%.3f", dataManager.totalTraceLength)) m")
+//                .subtitleTextStyle()
+//            Text("Maximum amplitude from center line: \(String(format: "%.3f", dataManager.maxAmplitude)) m")
+//                .subtitleTextStyle()
+//            Text("Average amplitude from center line: \(String(format: "%.3f", dataManager.averageAmplitude)) m")
+//                .subtitleTextStyle()
             
+            // Enable Export All Data button if any of the four straight headset and object positions are non-nil
             if SummaryType.allCases.contains(where: { type in
                 switch type {
                 case .straight1, .straight2, .straight3, .straight4:

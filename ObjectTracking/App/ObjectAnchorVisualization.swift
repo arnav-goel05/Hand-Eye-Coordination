@@ -331,7 +331,7 @@ class ObjectAnchorVisualization {
         )
     }
     
-    func isFingerNearFirstDot(_ fingerWorldPos: SIMD3<Float>, threshold: Float = 0.01) -> Bool {
+    func isFingerNearFirstDot(_ fingerWorldPos: SIMD3<Float>, threshold: Float = 0.005) -> Bool {
         let firstDotWorldPos: SIMD3<Float>?
         switch dataManager.currentStep {
         case .straight1:
@@ -351,7 +351,7 @@ class ObjectAnchorVisualization {
         return simd_distance(fingerWorldPos, firstDot) < threshold
     }
     
-    func isFingerNearLastDot(_ fingerWorldPos: SIMD3<Float>, threshold: Float = 0.01) -> Bool {
+    func isFingerNearLastDot(_ fingerWorldPos: SIMD3<Float>, threshold: Float = 0.005) -> Bool {
         let lastDotWorldPos: SIMD3<Float>?
         switch dataManager.currentStep {
         case .straight1:
@@ -464,6 +464,149 @@ class ObjectAnchorVisualization {
         }
     }
     
+//    private func createWindowPane() {
+//        let paneWidth: Float = 0.7
+//        let paneHeight: Float = 0.08
+//        let paneDepth: Float = 0
+//        
+//        let cornerRadius: Float = 0.05
+//        
+//        let boxMesh = MeshResource.generateBox(
+//            size: [paneWidth, paneHeight, paneDepth],
+//            cornerRadius: cornerRadius
+//        )
+//        
+//        var material = SimpleMaterial()
+//        material.color = .init(
+//            tint: UIColor(white: 1.0, alpha: 0.4),
+//            texture: nil
+//        )
+//        
+//        let paneEntity = ModelEntity(mesh: boxMesh, materials: [material])
+//
+//        let yOffset = virtualPoint.y + paneHeight / 2 + 0.045
+//        let zOffset: Float = -0.01
+//        paneEntity.transform.translation = [0, yOffset, zOffset]
+//        
+//       // entity.addChild(paneEntity)
+//       // windowPane = paneEntity
+//    }
+    
+//    private func createInstructionText() {
+//        let textString = "Trace the white line from your headset to the object."
+//        
+//        let mesh = MeshResource.generateText(
+//            textString,
+//            extrusionDepth: 0.001,
+//            font: .systemFont(ofSize: 0.1),
+//            containerFrame: .zero,
+//            alignment: .center,
+//            lineBreakMode: .byWordWrapping
+//        )
+//        let material = SimpleMaterial(color: .black, isMetallic: false)
+//        let textEntity = ModelEntity(mesh: mesh, materials: [material])
+//        
+//        let bounds = textEntity.visualBounds(relativeTo: nil).extents
+//        let initialHeight = bounds.y
+//        let scaleValue = textHeight / initialHeight
+//        textScale = [scaleValue, scaleValue, scaleValue]
+//        textEntity.transform.scale = textScale
+//        
+//        let textWidth = bounds.x * scaleValue
+//        let topOffset = virtualPoint.y + 0.05 + textHeight
+//        textEntity.transform.translation = [
+//            -0.25,
+//             topOffset,
+//             0
+//        ]
+//        
+//        entity.addChild(textEntity)
+//        instructionText = textEntity
+//    }
+//    
+//    private func updateInstructionText() {
+//        computeMaxAmplitude()
+//        computeAverageAmplitude()
+//        
+//        guard let textEntity = instructionText else { return }
+//        
+//        let traceLength = getTraceLength()
+//        dataManager.setTotalTraceLength(traceLength)
+//        let textString = String(
+//            format: "Trace the white line from your headset to the object.\n Distance from your index finger and the ideal path is %.3f m\n Trace length: %.3f m\n",
+//            distanceObject,
+//            traceLength
+//        )
+//        
+//        let newMesh = MeshResource.generateText(
+//            textString,
+//            extrusionDepth: 0.001,
+//            font: .systemFont(ofSize: 0.1),
+//            containerFrame: .zero,
+//            alignment: .center,
+//            lineBreakMode: .byWordWrapping
+//        )
+//        textEntity.model?.mesh = newMesh
+//        
+//        let bounds = textEntity.visualBounds(relativeTo: nil).extents
+//        let textWidth = bounds.x
+//        let topOffset = virtualPoint.y + 0.05 + textHeight
+//        
+//        textEntity.transform.translation = [
+//            -0.25,
+//             topOffset,
+//             0
+//        ]
+//        textEntity.transform.scale = textScale
+//    }
+//    
+//    private func computeAmplitudes() -> [Float] {
+//        guard
+//            let devicePose = worldInfo.queryDeviceAnchor(atTimestamp: CACurrentMediaTime()),
+//            !fingerTracker.getTimedTracePoints().isEmpty
+//        else {
+//            return []
+//        }
+//        
+//        let pose = Transform(matrix: devicePose.originFromAnchorTransform)
+//        let headsetPos = headsetVirtualPosition(from: pose)
+//        let objectPos  = adjustedObjectPosition(for: dataManager.currentStep, base: virtualPoint)
+//        
+//        // Interpolate positions to move them closer as in update(virtualPoint:)
+//        let t1: Float = 0.5
+//        let t2: Float = 0
+//        let closerHeadsetPos = simd_mix(headsetPos, objectPos, SIMD3<Float>(repeating: t1))
+//        let closerObjectPos = simd_mix(objectPos, headsetPos, SIMD3<Float>(repeating: t2))
+//        
+//        let lineVec    = closerObjectPos - closerHeadsetPos
+//        let lineLen    = simd_length(lineVec)
+//        guard lineLen > 0 else { return [] }
+//        
+//        let normLine = lineVec / lineLen
+//        
+//        // Map using only positions, ignore timestamps
+//        return fingerTracker.getTimedTracePoints().map { ptWithTime in
+//            let pt = ptWithTime.0
+//            let vecToPt        = pt - closerHeadsetPos
+//            let projLen        = simd_dot(vecToPt, normLine)
+//            let closestOnLine  = closerHeadsetPos + normLine * projLen
+//            return simd_length(pt - closestOnLine)
+//        }
+//    }
+//    
+//    private func computeMaxAmplitude() {
+//        let amplitudes = computeAmplitudes()
+//        let maxAmp = amplitudes.max() ?? 0
+//        dataManager.setMaxAmplitude(maxAmp)
+//    }
+//    
+//    private func computeAverageAmplitude() {
+//        let amplitudes = computeAmplitudes()
+//        let avgAmp = amplitudes.isEmpty
+//        ? 0
+//        : amplitudes.reduce(0, +) / Float(amplitudes.count)
+//        dataManager.setAverageAmplitude(avgAmp)
+//    }
     
     // MARK: - Instruction Attachments
     
