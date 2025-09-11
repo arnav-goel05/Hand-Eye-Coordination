@@ -331,7 +331,7 @@ class ObjectAnchorVisualization {
         )
     }
     
-    func isFingerNearFirstDot(_ fingerWorldPos: SIMD3<Float>, threshold: Float = 0.005) -> Bool {
+    func isFingerNearFirstDot(_ fingerWorldPos: SIMD3<Float>, threshold: Float = 0.01) -> Bool {
         let firstDotWorldPos: SIMD3<Float>?
         switch dataManager.currentStep {
         case .straight1:
@@ -351,7 +351,7 @@ class ObjectAnchorVisualization {
         return simd_distance(fingerWorldPos, firstDot) < threshold
     }
     
-    func isFingerNearLastDot(_ fingerWorldPos: SIMD3<Float>, threshold: Float = 0.005) -> Bool {
+    func isFingerNearLastDot(_ fingerWorldPos: SIMD3<Float>, threshold: Float = 0.01) -> Bool {
         let lastDotWorldPos: SIMD3<Float>?
         switch dataManager.currentStep {
         case .straight1:

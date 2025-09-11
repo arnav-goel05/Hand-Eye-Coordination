@@ -111,9 +111,8 @@ struct ObjectTrackingRealityView: View {
             let id = UUID()
             objectVisualizations[id] = viz
             
-            // Show initial guide lines and instructions immediately after a brief delay
             Task {
-                try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 second delay
+                try? await Task.sleep(nanoseconds: 100_000_000)
                 viz.hideAllButCurrentStepDots()
                 viz.showInitialInstructions()
             }
