@@ -40,14 +40,7 @@ struct SummaryView: View {
         VStack(spacing: 50) {
             Text("Overall Summary")
                 .titleTextStyle()
-//            Text("Total finger tracking distance: \(String(format: "%.3f", dataManager.totalTraceLength)) m")
-//                .subtitleTextStyle()
-//            Text("Maximum amplitude from center line: \(String(format: "%.3f", dataManager.maxAmplitude)) m")
-//                .subtitleTextStyle()
-//            Text("Average amplitude from center line: \(String(format: "%.3f", dataManager.averageAmplitude)) m")
-//                .subtitleTextStyle()
-            
-            // Enable Export All Data button if any of the four straight headset and object positions are non-nil
+
             if SummaryType.allCases.contains(where: { type in
                 switch type {
                 case .straight1, .straight2, .straight3, .straight4:
@@ -62,32 +55,6 @@ struct SummaryView: View {
                 .buttonTextStyle()
             }
         }
-
-//        HStack(spacing: 15) {
-//            ForEach(SummaryType.allCases, id: \.self) { type in
-//                Button(type.buttonTitle) {
-//                    selectedSummary = type
-//                }
-//                .buttonTextStyle()
-//            }
-//        }
-//        .fullScreenCover(item: $selectedSummary) { which in
-//            SummaryImmersiveView(
-//                userTrace: userTrace(for: which),
-//                headsetPos: headsetPos(for: which),
-//                objectPos: objectPos(for: which),
-//                lineType: {
-//                    switch which {
-//                    case .straight1: return .straight1
-//                    case .straight2: return .straight2
-//                    case .straight3: return .straight3
-//                    case .straight4: return .straight4
-//                    case .zigzagBeginner: return .zigzagBeginner
-//                    case .zigzagAdvanced: return .zigzagAdvanced
-//                    }
-//                }()
-//            )
-//        }
         .fileExporter(
             isPresented: $isExportingCSV,
             document: csvURL.map { URLDocument(fileURL: $0) },
@@ -229,75 +196,7 @@ struct SummaryView: View {
             // Handle error if needed
         }
     }
-//    
-//    private func exportAllData() {
-//        var combinedCSV = ""
-//        
-//        if let startStraight = headsetPos(for: .straight), let endStraight = objectPos(for: .straight) {
-//            let dots = generateStraightLineGuideDots(start: startStraight, end: endStraight)
-//            if !dots.isEmpty {
-//                combinedCSV += "Straight Guide Dots\nX,Y,Z\n"
-//                for dot in dots {
-//                    combinedCSV += "\(dot.x),\(dot.y),\(dot.z)\n"
-//                }
-//                combinedCSV += "\n"
-//            }
-//        }
-//        
-//        let straightTrace = dataManager.straightUserTrace
-//        if !straightTrace.isEmpty {
-//            combinedCSV += "Straight User Trace\n" + dataManager.exportUserTraceCSV(for: .straight) + "\n"
-//        }
-//        
-//        if let startZigzagBeginner = headsetPos(for: .zigzagBeginner), let endZigzagBeginner = objectPos(for: .zigzagBeginner) {
-//            let amplitude: Float = 0.05 // beginner
-//            let frequency = 2
-//            let dots = generateZigZagGuideDots(start: startZigzagBeginner, end: endZigzagBeginner, amplitude: amplitude, frequency: frequency)
-//            if !dots.isEmpty {
-//                combinedCSV += "Zigzag Beginner Guide Dots\nX,Y,Z\n"
-//                for dot in dots {
-//                    combinedCSV += "\(dot.x),\(dot.y),\(dot.z)\n"
-//                }
-//                combinedCSV += "\n"
-//            }
-//        }
-//        
-//        let zigzagBeginnerTrace = dataManager.zigzagBeginnerUserTrace
-//        if !zigzagBeginnerTrace.isEmpty {
-//            combinedCSV += "Zigzag Beginner User Trace\n" + dataManager.exportUserTraceCSV(for: .zigzagBeginner) + "\n"
-//        }
-//        
-//        if let startZigzagAdvanced = headsetPos(for: .zigzagAdvanced), let endZigzagAdvanced = objectPos(for: .zigzagAdvanced) {
-//            let amplitude: Float = 0.05 // beginner
-//            let frequency = 4
-//            let dots = generateZigZagGuideDots(start: startZigzagAdvanced, end: endZigzagAdvanced, amplitude: amplitude, frequency: frequency)
-//            if !dots.isEmpty {
-//                combinedCSV += "Zigzag Advanced Guide Dots\nX,Y,Z\n"
-//                for dot in dots {
-//                    combinedCSV += "\(dot.x),\(dot.y),\(dot.z)\n"
-//                }
-//                combinedCSV += "\n"
-//            }
-//        }
-//        
-//        let zigzagAdvancedTrace = dataManager.zigzagAdvancedUserTrace
-//        if !zigzagAdvancedTrace.isEmpty {
-//            combinedCSV += "Zigzag Advanced User Trace\n" + dataManager.exportUserTraceCSV(for: .zigzagAdvanced) + "\n"
-//        }
-//        
-//        guard !combinedCSV.isEmpty else { return }
-//        
-//        do {
-//            let tempDir = FileManager.default.temporaryDirectory
-//            let fileURL = tempDir.appendingPathComponent("AllExportedData.csv")
-//            try combinedCSV.write(to: fileURL, atomically: true, encoding: .utf8)
-//            csvURL = fileURL
-//            isExportingCSV = true
-//        } catch {
-//            // Handle error if needed
-//        }
-//    }
-//
+
     private func exportAllData() {
         var rows: [String] = ["task,path_type,attempt_number,point_idx,timestamp,x,y,z"]
 

@@ -13,10 +13,6 @@ class AppState {
     var isImmersiveSpaceOpened = false
     
     func didLeaveImmersiveSpace() {
-        // Stop the provider; the provider that just ran in the
-        // immersive space is now in a paused state and isn't needed
-        // anymore. When a person reenters the immersive space,
-        // run a new provider.
         arkitSession.stop()
         isImmersiveSpaceOpened = false
     }

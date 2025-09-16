@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		393E4AB02A9629A7005C9691 /* Entity+ObjectTracking.swift in Sources */ = {isa = PBXBuildFile; fileRef = 393E4AAF2A9629A7005C9691 /* Entity+ObjectTracking.swift */; };
-		394D18CF2A960EB9009E3A2E /* ObjectTrackingApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 394D18CE2A960EB9009E3A2E /* ObjectTrackingApp.swift */; };
+		394D18CF2A960EB9009E3A2E /* HandEyeCoordinationApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 394D18CE2A960EB9009E3A2E /* HandEyeCoordinationApp.swift */; };
 		396786C62B766C54007A056F /* ObjectAnchorVisualization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 396786C52B766C44007A056F /* ObjectAnchorVisualization.swift */; };
 		A72DB5A22E31D247002CA225 /* Cocoa.referenceobject in Sources */ = {isa = PBXBuildFile; fileRef = A72DB5A12E31D247002CA225 /* Cocoa.referenceobject */; };
 		A73A6D692E50DA9A00370A1A /* Soy sauce.referenceobject in Sources */ = {isa = PBXBuildFile; fileRef = A73A6D682E50DA9A00370A1A /* Soy sauce.referenceobject */; };
@@ -16,7 +16,7 @@
 		A7827E6D2E241302002C513C /* SummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7827E6C2E2412F3002C513C /* SummaryView.swift */; };
 		A7DEC3BA2E202290000FF2CF /* FingerTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7DEC3B92E20228B000FF2CF /* FingerTracker.swift */; };
 		EBA142DF2AD431AD00FB20AD /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBA142DE2AD431AD00FB20AD /* HomeView.swift */; };
-		EBDA9DAC2AD44D140040C78E /* ObjectTrackingRealityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBDA9DAB2AD44D140040C78E /* ObjectTrackingRealityView.swift */; };
+		EBDA9DAC2AD44D140040C78E /* HandEyeCoordinationRealityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBDA9DAB2AD44D140040C78E /* HandEyeCoordinationRealityView.swift */; };
 		EBE296552AE27E5900F6838C /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBE296542AE27E5900F6838C /* AppState.swift */; };
 /* End PBXBuildFile section */
 
@@ -24,7 +24,7 @@
 		393E4AAD2A96284F005C9691 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		393E4AAF2A9629A7005C9691 /* Entity+ObjectTracking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Entity+ObjectTracking.swift"; sourceTree = "<group>"; };
 		394D18C72A960EB9009E3A2E /* ObjectTracking.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ObjectTracking.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		394D18CE2A960EB9009E3A2E /* ObjectTrackingApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectTrackingApp.swift; sourceTree = "<group>"; };
+		394D18CE2A960EB9009E3A2E /* HandEyeCoordinationApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HandEyeCoordinationApp.swift; sourceTree = "<group>"; };
 		396786C52B766C44007A056F /* ObjectAnchorVisualization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectAnchorVisualization.swift; sourceTree = "<group>"; };
 		8B0AF4152C3DC91B0076F08A /* LICENSE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
 		8B0AF4162C3EEDDA0076F08A /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
@@ -35,7 +35,7 @@
 		A7827E6C2E2412F3002C513C /* SummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SummaryView.swift; sourceTree = "<group>"; };
 		A7DEC3B92E20228B000FF2CF /* FingerTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FingerTracker.swift; sourceTree = "<group>"; };
 		EBA142DE2AD431AD00FB20AD /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
-		EBDA9DAB2AD44D140040C78E /* ObjectTrackingRealityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectTrackingRealityView.swift; sourceTree = "<group>"; };
+		EBDA9DAB2AD44D140040C78E /* HandEyeCoordinationRealityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HandEyeCoordinationRealityView.swift; sourceTree = "<group>"; };
 		EBE296542AE27E5900F6838C /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		ED57943BA036C0E468258800 /* LICENSE.txt */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -73,7 +73,7 @@
 				8B0AF4162C3EEDDA0076F08A /* README.md */,
 				8B0AF4152C3DC91B0076F08A /* LICENSE.txt */,
 				396786E22B7A5D7E007A056F /* Reference Objects */,
-				394D18C92A960EB9009E3A2E /* ObjectTracking */,
+				394D18C92A960EB9009E3A2E /* HandEyeCoordination */,
 				394D18C82A960EB9009E3A2E /* Products */,
 				BA828D328595146A23B0FCD1 /* Configuration */,
 				011ADA283792D14163C617DE /* LICENSE */,
@@ -88,21 +88,21 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		394D18C92A960EB9009E3A2E /* ObjectTracking */ = {
+		394D18C92A960EB9009E3A2E /* HandEyeCoordination */ = {
 			isa = PBXGroup;
 			children = (
 				A79DD4E92E50B57A001CA2C9 /* Calculations */,
 				A79DD4E82E50AB52001CA2C9 /* Patterns */,
 				A77B24CB2E36191E00C4C891 /* Modifiers */,
 				A750C6292E333988009A880C /* ViewModels */,
-				394D18CE2A960EB9009E3A2E /* ObjectTrackingApp.swift */,
+				394D18CE2A960EB9009E3A2E /* HandEyeCoordinationApp.swift */,
 				EBDA9DAD2AD44E270040C78E /* Views */,
 				EBF0DF0E2AEFFDB900ABF63C /* App */,
 				EBF0DF0F2AEFFE1400ABF63C /* Extensions */,
 				393E4AAD2A96284F005C9691 /* Info.plist */,
 				A77B24C92E36190600C4C891 /* Styles.swift */,
 			);
-			path = ObjectTracking;
+			path = HandEyeCoordination;
 			sourceTree = "<group>";
 		};
 		396786E22B7A5D7E007A056F /* Reference Objects */ = {
@@ -127,7 +127,7 @@
 			children = (
 				A7827E6C2E2412F3002C513C /* SummaryView.swift */,
 				EBA142DE2AD431AD00FB20AD /* HomeView.swift */,
-				EBDA9DAB2AD44D140040C78E /* ObjectTrackingRealityView.swift */,
+				EBDA9DAB2AD44D140040C78E /* HandEyeCoordinationRealityView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -192,7 +192,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 394D18C22A960EB9009E3A2E /* Build configuration list for PBXProject "ObjectTracking" */;
+			buildConfigurationList = 394D18C22A960EB9009E3A2E /* Build configuration list for PBXProject "Hand-Eye-Coordination" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -227,11 +227,11 @@
 			files = (
 				A7DEC3BA2E202290000FF2CF /* FingerTracker.swift in Sources */,
 				A72DB5A22E31D247002CA225 /* Cocoa.referenceobject in Sources */,
-				EBDA9DAC2AD44D140040C78E /* ObjectTrackingRealityView.swift in Sources */,
+				EBDA9DAC2AD44D140040C78E /* HandEyeCoordinationRealityView.swift in Sources */,
 				EBA142DF2AD431AD00FB20AD /* HomeView.swift in Sources */,
 				A7827E6D2E241302002C513C /* SummaryView.swift in Sources */,
 				A73A6D692E50DA9A00370A1A /* Soy sauce.referenceobject in Sources */,
-				394D18CF2A960EB9009E3A2E /* ObjectTrackingApp.swift in Sources */,
+				394D18CF2A960EB9009E3A2E /* HandEyeCoordinationApp.swift in Sources */,
 				A77B24CA2E36190600C4C891 /* Styles.swift in Sources */,
 				396786C62B766C54007A056F /* ObjectAnchorVisualization.swift in Sources */,
 				393E4AB02A9629A7005C9691 /* Entity+ObjectTracking.swift in Sources */,
@@ -379,7 +379,7 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ObjectTracking/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Object Tracking";
+				INFOPLIST_KEY_CFBundleDisplayName = HandEyeCoordination;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -415,7 +415,7 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ObjectTracking/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Object Tracking";
+				INFOPLIST_KEY_CFBundleDisplayName = HandEyeCoordination;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -438,7 +438,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		394D18C22A960EB9009E3A2E /* Build configuration list for PBXProject "ObjectTracking" */ = {
+		394D18C22A960EB9009E3A2E /* Build configuration list for PBXProject "Hand-Eye-Coordination" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				394D18E32A960EBA009E3A2E /* Debug */,
