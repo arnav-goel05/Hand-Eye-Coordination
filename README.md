@@ -1,6 +1,6 @@
 # Exploring object tracking with ARKit
-Find and track real-world objects in visionOS using reference objects trained with Create ML.
+Stroke affects more than ten thousand Singaporeans every year. For many survivors, the way doctors currently assess the knock on effects is still very manual, imprecise, and heavily dependent on observation.
 
-The sample app demonstrates how to use a Core ML model (a reference object) to discover and track a specific object in a person’s surroundings in visionOS. This capability allows you to create engaging experiences based on objects in a person's surroundings and lets you attach digital content to these objects. To learn more about the features that this sample implements, see [Exploring object tracking with ARKit](https://developer.apple.com/documentation/visionos/exploring_object_tracking_with_arkit).
+Together with the NUH Department of Rehabilitation, I am developing a 3D hand eye coordination assessment tool for hand dexterity in Swift and SwiftUI, built with ARKit and RealityKit for the Apple Vision Pro. The test measures how closely a patient can follow an ideal path between two points, capturing even the smallest deviations in finger movement.
 
-> Features in this sample that rely on ARKit only run on device, not in Simulator.
+This project has taken me through the full Software Development Life Cycle, from gathering requirements to design and build, and it is now in clinical trials.
